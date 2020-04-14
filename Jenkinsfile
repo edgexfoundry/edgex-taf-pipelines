@@ -18,13 +18,13 @@ def call(config) {
         agent { label edgex.mainNode(config) }
         triggers { cron('H 6 * * *') }
         options { 
-            timeout(time: 2, unit: 'HOURS')
-            timestamps() 
+            timeout(time: 3, unit: 'HOURS')
+            timestamps()
         }
 
         environment {
             // Define test branches and device services
-            BRANCHLIST = 'master'
+            BRANCHLIST = 'master' // Branch in edgex-taf repo
             PROFILELIST = 'device-virtual,device-modbus'
             TAF_COMMOM_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common:latest'
             TAF_COMMOM_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common-arm64:latest'
@@ -46,7 +46,7 @@ def call(config) {
                             stage('amd64-redis'){
                                 environment {
                                     USE_DB = '-redis'
-                                    USE_SECURITY ='-'
+                                    SECURITY_SERVICE_NEEDED = false
                                 }
                                 steps {
                                     script {
@@ -57,7 +57,7 @@ def call(config) {
                             stage('amd64-mongo'){
                                 environment {
                                     USE_DB = '-mongo'
-                                    USE_SECURITY='-'
+                                    SECURITY_SERVICE_NEEDED = false
                                 }
                                 steps {
                                     script {
@@ -65,18 +65,17 @@ def call(config) {
                                     }
                                 }
                             }
-                            // Comment out security job temporarily, will enable it after verification
-                            // stage('amd64-mongo-security'){
-                            //     environment {
-                            //         USE_DB = '-mongo'
-                            //         USE_SECURITY = '-security-'
-                            //     }
-                            //     steps {
-                            //         script {
-                            //             startTest()
-                            //         }
-                            //     }
-                            // }
+                            stage('amd64-mongo-security'){
+                                environment {
+                                    USE_DB = '-mongo'
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        startTest()
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -91,7 +90,7 @@ def call(config) {
                             stage('arm64-redis'){
                                 environment {
                                     USE_DB = '-redis'
-                                    USE_SECURITY ='-'
+                                    SECURITY_SERVICE_NEEDED = false
                                 }
                                 steps {
                                     script {
@@ -102,7 +101,7 @@ def call(config) {
                             stage('arm64-mongo'){
                                 environment {
                                     USE_DB = '-mongo'
-                                    USE_SECURITY='-'
+                                    SECURITY_SERVICE_NEEDED = false
                                 }
                                 steps {
                                     script {
@@ -110,18 +109,17 @@ def call(config) {
                                     }
                                 }
                             }
-                            // Comment out security job temporarily, will enable it after verification
-                            // stage('arm64-mongo-security'){
-                            //     environment {
-                            //         USE_DB = '-mongo'
-                            //         USE_SECURITY = '-security-'
-                            //     }
-                            //     steps {
-                            //         script {
-                            //             startTest()
-                            //         }
-                            //     }
-                            // }
+                            stage('arm64-mongo-security'){
+                                environment {
+                                    USE_DB = '-mongo'
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        startTest()
+                                    }
+                                }
+                            }
                         }
                     }
                 }    
@@ -136,10 +134,10 @@ def call(config) {
 
                             catchError { unstash "x86_64-redis-${BRANCH}-report" }
                             catchError { unstash "x86_64-mongo-${BRANCH}-report" }
-                            // catchError { unstash "x86_64-mongo-security-${BRANCH}-report" }
+                            catchError { unstash "x86_64-mongo-security-${BRANCH}-report" }
                             catchError { unstash "arm64-redis-${BRANCH}-report" }
                             catchError { unstash "arm64-mongo-${BRANCH}-report" }
-                            // catchError { unstash "arm64-mongo-security-${BRANCH}-report" }
+                            catchError { unstash "arm64-mongo-security-${BRANCH}-report" }
                         }
                     
                         dir ('TAF/testArtifacts/reports/merged-report/') {
@@ -169,7 +167,7 @@ def call(config) {
 
 def startTest() {
     catchError {
-        timeout(time: 40, unit: 'MINUTES') {
+        timeout(time: 1, unit: 'HOURS') {
             def rootDir = pwd()
             def runTestScripts = load "${rootDir}/runTestScripts.groovy"
             runTestScripts.main()
