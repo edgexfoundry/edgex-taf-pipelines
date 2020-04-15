@@ -2,16 +2,14 @@
 def main() {
     def BRANCHES = "${BRANCHLIST}".split(',')
     def PROFILES = "${PROFILELIST}".split(',')
-    
+    def USE_SECURITY = '-'
     def runbranchstage = [:]
 
     for (x in BRANCHES) {
         
-        if (SECURITY_SERVICE_NEEDED == 'true') {
+        if ("${SECURITY_SERVICE_NEEDED}" == 'true') {
             USE_SECURITY = '-security-'
-        } else {
-            USE_SECURITY = '-'
-        }
+        } 
         
         def BRANCH = x
         runbranchstage["Test ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"]= {
