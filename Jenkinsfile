@@ -18,7 +18,6 @@ def call(config) {
         agent { label edgex.mainNode(config) }
         triggers { cron('H 6 * * *') }
         options { 
-            timeout(time: 3, unit: 'HOURS')
             timestamps()
         }
 
@@ -47,6 +46,17 @@ def call(config) {
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
+                                }
+                                steps {
+                                    script {
+                                        startTest()
+                                    }
+                                }
+                            }
+                            stage('amd64-redis-security'){
+                                environment {
+                                    USE_DB = '-redis'
+                                    SECURITY_SERVICE_NEEDED = true
                                 }
                                 steps {
                                     script {
@@ -97,7 +107,18 @@ def call(config) {
                                         startTest()
                                     }
                                 }
-                            }                        
+                            }
+                            stage('arm64-redis-security'){
+                                environment {
+                                    USE_DB = '-redis'
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        startTest()
+                                    }
+                                }
+                            }
                             stage('arm64-mongo'){
                                 environment {
                                     USE_DB = '-mongo'
@@ -133,9 +154,11 @@ def call(config) {
                             def BRANCH = z
 
                             catchError { unstash "x86_64-redis-${BRANCH}-report" }
+                            catchError { unstash "x86_64-redis-security-${BRANCH}-report" }
                             catchError { unstash "x86_64-mongo-${BRANCH}-report" }
                             catchError { unstash "x86_64-mongo-security-${BRANCH}-report" }
                             catchError { unstash "arm64-redis-${BRANCH}-report" }
+                            catchError { unstash "arm64-redis-security-${BRANCH}-report" }
                             catchError { unstash "arm64-mongo-${BRANCH}-report" }
                             catchError { unstash "arm64-mongo-security-${BRANCH}-report" }
                         }
