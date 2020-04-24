@@ -1,6 +1,6 @@
 def main() {
     def BRANCHES = "${BRANCHLIST}".split(',')
-    def profile = "${PROFILELIST}" //only device-virtual
+    def profile = 'device-virtual'
     def USE_SECURITY = '-'
 
     def runbranchstage = [:]
@@ -12,7 +12,7 @@ def main() {
 
         def BRANCH = x
         
-        runbranchstage["Test ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"]= {
+        runbranchstage["BackwardTest ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"]= {
             node("${SLAVE}") {
                 stage ('Checkout edgex-taf repository') {
                     checkout([$class: 'GitSCM',
@@ -24,7 +24,7 @@ def main() {
                         ])
                 }
 
-                stage ("Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("[Fuji] Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     dir ('TAF/utils/scripts/docker') {
                         sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY} fuji"
                         sh 'ls *.yml *.yaml'
@@ -32,17 +32,17 @@ def main() {
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u functionalTest/deploy-edgex.robot -p default"
+                            -e USE_DB=${USE_DB} -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
+                            --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
                 }
 
-                stage ("Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("[Fuji] Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     echo "Profile : ${profile}"
                     echo "===== Deploy ${profile} ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u functionalTest/device-service/deploy_device_service.robot -p ${profile}"
+                            --exclude Skipped --include deploy-device-service -u deploy.robot -p ${profile}"
 
                     echo "===== Run ${profile} Test Case ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
@@ -60,10 +60,10 @@ def main() {
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u functionalTest/device-service/shutdown_device_service.robot -p ${profile}"
+                            --exclude Skipped --include shutdown-device-service -u shutdown.robot -p ${profile}"
                 }
 
-                stage ("Stop EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("[Fuji] Stop EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     sh 'curl -X DELETE http://localhost:48080/api/v1/event/scruball'
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${COMPOSE_IMAGE} \
@@ -78,9 +78,9 @@ def main() {
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
-                            -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
+                            -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e USE_DB=${USE_DB} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u deploy-edgex-backward.robot -p ${profile}"
+                            --exclude Skipped --include backward -u deploy.robot -p ${profile}"
                 }
                 
                 stage ("[Backward] Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
@@ -125,7 +125,7 @@ def main() {
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u shutdown-backward.robot -p ${profile}"
+                            --exclude Skipped --include shutdown-edgex -u shutdown.robot -p ${profile}"
                 }                             
             }
         }
