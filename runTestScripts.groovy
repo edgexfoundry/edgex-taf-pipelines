@@ -32,8 +32,8 @@ def main() {
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u functionalTest/deploy-edgex.robot -p default"
+                            -e USE_DB=${USE_DB} -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
+                            --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
                 }
 
                 echo "Profiles : ${PROFILES}"
@@ -46,7 +46,7 @@ def main() {
                             sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                                    --exclude Skipped -u functionalTest/device-service/deploy_device_service.robot -p ${profile}"
+                                    --exclude Skipped --include deploy-device-service -u deploy.robot -p ${profile}"
 
                             echo "===== Run ${profile} Test Case ====="
                             sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
@@ -63,7 +63,7 @@ def main() {
                             sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                                    --exclude Skipped -u functionalTest/device-service/shutdown_device_service.robot -p ${profile}"
+                                    --exclude Skipped --include shutdown-device-service -u shutdown.robot -p ${profile}"
                         }
                     }
                 }
@@ -92,7 +92,7 @@ def main() {
                 stage ("Shutdown EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped -u functionalTest/shutdown.robot -p default"
+                            --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default"
                 }
             }
         }
