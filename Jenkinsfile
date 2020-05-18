@@ -84,37 +84,37 @@ def call(config) {
                             }
                         }
                     }
-                    stage ('Run Backward Test on amd64') {
-                        environment {
-                            ARCH = 'x86_64'
-                            SLAVE = edgex.getNode(config, 'amd64')
-                            TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_AMD64}"
-                            COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
-                            SECURITY_SERVICE_NEEDED = false
-                        }
-                        stages {
-                            stage('backward-amd64-redis'){
-                                environment {
-                                    USE_DB = '-redis'
-                                }
-                                steps {
-                                    script {
-                                        backwardTest()
-                                    }
-                                }
-                            }
-                            stage('backward-amd64-mongo'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                }
-                                steps {
-                                    script {
-                                        backwardTest()
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // stage ('Run Backward Test on amd64') {
+                    //     environment {
+                    //         ARCH = 'x86_64'
+                    //         SLAVE = edgex.getNode(config, 'amd64')
+                    //         TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_AMD64}"
+                    //         COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
+                    //         SECURITY_SERVICE_NEEDED = false
+                    //     }
+                    //     stages {
+                    //         stage('backward-amd64-redis'){
+                    //             environment {
+                    //                 USE_DB = '-redis'
+                    //             }
+                    //             steps {
+                    //                 script {
+                    //                     backwardTest()
+                    //                 }
+                    //             }
+                    //         }
+                    //         stage('backward-amd64-mongo'){
+                    //             environment {
+                    //                 USE_DB = '-mongo'
+                    //             }
+                    //             steps {
+                    //                 script {
+                    //                     backwardTest()
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }
                     stage ('Run Integration Test on arm64') {
                         environment {
                             ARCH = 'arm64'
@@ -178,8 +178,8 @@ def call(config) {
                         for (z in BRANCHES) {
                             def BRANCH = z
                             // Backward Test Report
-                            catchError { unstash "backward-x86_64-redis-${BRANCH}-fuji-report" }
-                            catchError { unstash "backward-x86_64-mongo-${BRANCH}-fuji-report" }
+                            // catchError { unstash "backward-x86_64-redis-${BRANCH}-fuji-report" }
+                            // catchError { unstash "backward-x86_64-mongo-${BRANCH}-fuji-report" }
 
                             // Integration Test Report
                             catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
