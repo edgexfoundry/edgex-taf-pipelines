@@ -24,9 +24,9 @@ def main() {
                         ])
                 }
 
-                stage ("[Fuji] Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("[${BCT_RELEASE}] Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     dir ('TAF/utils/scripts/docker') {
-                        sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY} fuji"
+                        sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY} ${BCT_RELEASE}"
                         sh 'ls *.yml *.yaml'
                     }
 
@@ -36,7 +36,7 @@ def main() {
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
                 }
 
-                stage ("[Fuji] Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("[${BCT_RELEASE}] Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     echo "Profile : ${profile}"
                     echo "===== Deploy ${profile} ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
@@ -49,7 +49,7 @@ def main() {
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include Backward -u functionalTest/device-service/common -p ${profile} \
-                            --name ${profile}-fuji"
+                            --name ${profile}-${BCT_RELEASE}"
                             
                     dir ('TAF/testArtifacts/reports/rename-report') {
                         sh "cp ../edgex/log.html ${profile}-common-log.html"
@@ -63,7 +63,7 @@ def main() {
                             --exclude Skipped --include shutdown-device-service -u shutdown.robot -p ${profile}"
                 }
 
-                stage ("[Fuji] Stop EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("[${BCT_RELEASE}] Stop EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     sh 'curl -X DELETE http://localhost:48080/api/v1/event/scruball'
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${COMPOSE_IMAGE} \
@@ -72,7 +72,7 @@ def main() {
                 
                 stage ("[Backward] Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     dir ('TAF/utils/scripts/docker') {
-                        sh "sh get-compose-file-backward.sh ${USE_DB} ${ARCH} ${USE_SECURITY} fuji"
+                        sh "sh get-compose-file-backward.sh ${USE_DB} ${ARCH} ${USE_SECURITY} ${BCT_RELEASE}"
                         sh 'ls *.yaml'
                     }
 
@@ -115,10 +115,10 @@ def main() {
                             sh 'mkdir ../merged-report'
                         }
                         //Copy log file to merged-report folder
-                        sh "cp log.html ../merged-report/backward-${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}-fuji-log.html"
-                        sh "cp result.xml ../merged-report/backward-${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}-fuji-report.xml"
+                        sh "cp log.html ../merged-report/backward-${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}-${BCT_RELEASE}-log.html"
+                        sh "cp result.xml ../merged-report/backward-${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}-${BCT_RELEASE}-report.xml"
                     }
-                    stash name: "backward-${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}-fuji-report", includes: "TAF/testArtifacts/reports/merged-report/*", allowEmpty: true
+                    stash name: "backward-${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}-${BCT_RELEASE}-report", includes: "TAF/testArtifacts/reports/merged-report/*", allowEmpty: true
                 }
                 
                 stage ("[Backward] Shutdown EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {

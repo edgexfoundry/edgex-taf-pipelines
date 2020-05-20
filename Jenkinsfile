@@ -26,6 +26,9 @@ def call(config) {
             TAF_COMMOM_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose:latest'
             COMPOSE_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose-arm64:latest'
+
+            // Use on backword compatibility test
+            BCT_RELEASE = 'geneva'
         }
         stages {
             stage ('Run Test') {
@@ -84,37 +87,38 @@ def call(config) {
                             }
                         }
                     }
-                    // stage ('Run Backward Test on amd64') {
-                    //     environment {
-                    //         ARCH = 'x86_64'
-                    //         SLAVE = edgex.getNode(config, 'amd64')
-                    //         TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_AMD64}"
-                    //         COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
-                    //         SECURITY_SERVICE_NEEDED = false
-                    //     }
-                    //     stages {
-                    //         stage('backward-amd64-redis'){
-                    //             environment {
-                    //                 USE_DB = '-redis'
-                    //             }
-                    //             steps {
-                    //                 script {
-                    //                     backwardTest()
-                    //                 }
-                    //             }
-                    //         }
-                    //         stage('backward-amd64-mongo'){
-                    //             environment {
-                    //                 USE_DB = '-mongo'
-                    //             }
-                    //             steps {
-                    //                 script {
-                    //                     backwardTest()
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    // }
+                    stage ('Run Backward Test on amd64') {
+                        environment {
+                            ARCH = 'x86_64'
+                            SLAVE = edgex.getNode(config, 'amd64')
+                            TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_AMD64}"
+                            COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
+                        }
+                        stages {
+                            stage('backward-amd64-redis'){
+                                environment {
+                                    USE_DB = '-redis'
+                                    SECURITY_SERVICE_NEEDED = false
+                                }
+                                steps {
+                                    script {
+                                        backwardTest()
+                                    }
+                                }
+                            }
+                            stage('backward-amd64-redis-security'){
+                                environment {
+                                    USE_DB = '-redis'
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        backwardTest()
+                                    }
+                                }
+                            }
+                        }
+                    }
                     stage ('Run Integration Test on arm64') {
                         environment {
                             ARCH = 'arm64'
@@ -169,6 +173,38 @@ def call(config) {
                             }
                         }
                     }
+                    stage ('Run Backward Test on arm64') {
+                        environment {
+                            ARCH = 'arm64'
+                            SLAVE = edgex.getNode(config, 'arm64')
+                            TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_ARM64}"
+                            COMPOSE_IMAGE = "${COMPOSE_IMAGE_ARM64}"
+                        }
+                        stages {
+                            stage('arm64-redis'){
+                                environment {
+                                    USE_DB = '-redis'
+                                    SECURITY_SERVICE_NEEDED = false
+                                }
+                                steps {
+                                    script {
+                                        backwardTest()
+                                    }
+                                }
+                            }
+                            stage('arm64-redis-security'){
+                                environment {
+                                    USE_DB = '-redis'
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        backwardTest()
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             stage ('Publish Robotframework Report...') {
@@ -178,8 +214,10 @@ def call(config) {
                         for (z in BRANCHES) {
                             def BRANCH = z
                             // Backward Test Report
-                            // catchError { unstash "backward-x86_64-redis-${BRANCH}-fuji-report" }
-                            // catchError { unstash "backward-x86_64-mongo-${BRANCH}-fuji-report" }
+                            catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
+                            catchError { unstash "backward-x86_64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                            catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
+                            catchError { unstash "backward-arm64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
 
                             // Integration Test Report
                             catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
