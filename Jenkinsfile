@@ -2,8 +2,7 @@
 def LOGFILES
 
 call([
-    project: 'funcational-test',
-    mavenSettings: ['functional-testing-settings:SETTINGS_FILE']
+    project: 'funcational-test'
 ])
 
 def call(config) {
@@ -16,7 +15,7 @@ def call(config) {
 
     pipeline {
         agent { label edgex.mainNode(config) }
-        triggers { cron('H 6 * * *') }
+        triggers { cron('H 0 * * *') }
         options { 
             timestamps()
         }
