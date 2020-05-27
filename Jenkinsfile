@@ -19,6 +19,10 @@ def call(config) {
         options {
             timestamps()
         }
+        parameters {
+            choice(name: 'TESTSTRATEGY', choices: ['All', 'IntegrationTest', 'BackwardTest'])
+            choice(name: 'ARCH', choices: ['All', 'x86_64', 'arm64'])
+        }
         environment {
             // Define test branches and device services
             BRANCHLIST = 'master'
@@ -34,6 +38,10 @@ def call(config) {
             stage ('Run Test') {
                 parallel {
                     stage ('Run Integration Test on amd64') {
+                        when { 
+                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'IntegrationTest' }
+                            expression { params.ARCH == 'All' || params.ARCH == 'x86_64' }
+                        }
                         environment {
                             ARCH = 'x86_64'
                             SLAVE = edgex.getNode(config, 'amd64')
@@ -88,6 +96,10 @@ def call(config) {
                         }
                     }
                     stage ('Run Backward Test on amd64') {
+                        when { 
+                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'BackwardTest' }
+                            expression { params.ARCH == 'All' || params.ARCH == 'x86_64' }
+                        }
                         environment {
                             ARCH = 'x86_64'
                             SLAVE = edgex.getNode(config, 'amd64')
@@ -120,6 +132,10 @@ def call(config) {
                         }
                     }
                     stage ('Run Integration Test on arm64') {
+                        when { 
+                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'IntegrationTest' }
+                            expression { params.ARCH == 'All' || params.ARCH == 'arm64' }
+                        }
                         environment {
                             ARCH = 'arm64'
                             SLAVE = edgex.getNode(config, 'arm64')
@@ -174,6 +190,10 @@ def call(config) {
                         }
                     }
                     stage ('Run Backward Test on arm64') {
+                        when { 
+                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'BackwardTest' }
+                            expression { params.ARCH == 'All' || params.ARCH == 'arm64' }
+                        }
                         environment {
                             ARCH = 'arm64'
                             SLAVE = edgex.getNode(config, 'arm64')
@@ -213,39 +233,75 @@ def call(config) {
                         def BRANCHES = "${BRANCHLIST}".split(',')
                         for (z in BRANCHES) {
                             def BRANCH = z
+
                             // Backward Test Report
-                            catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                            catchError { unstash "backward-x86_64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
-                            catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                            catchError { unstash "backward-arm64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'BackwardTest')) {
+                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'x86_64')) {
+                                    catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
+                                    catchError { unstash "backward-x86_64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                                }
+                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'arm64')) {
+                                    catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
+                                    catchError { unstash "backward-arm64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                                }
+                            }
 
                             // Integration Test Report
-                            catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
-                            catchError { unstash "integration-x86_64-redis-security-${BRANCH}-report" }
-                            catchError { unstash "integration-x86_64-mongo-${BRANCH}-report" }
-                            catchError { unstash "integration-x86_64-mongo-security-${BRANCH}-report" }
-                            catchError { unstash "integration-arm64-redis-${BRANCH}-report" }
-                            catchError { unstash "integration-arm64-redis-security-${BRANCH}-report" }
-                            catchError { unstash "integration-arm64-mongo-${BRANCH}-report" }
-                            catchError { unstash "integration-arm64-mongo-security-${BRANCH}-report" }
+                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'IntegrationTest')) {
+                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'x86_64')) {
+                                    catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
+                                    catchError { unstash "integration-x86_64-redis-security-${BRANCH}-report" }
+                                    catchError { unstash "integration-x86_64-mongo-${BRANCH}-report" }
+                                    catchError { unstash "integration-x86_64-mongo-security-${BRANCH}-report" }
+                                }
+                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'arm64')) {
+                                    catchError { unstash "integration-arm64-redis-${BRANCH}-report" }
+                                    catchError { unstash "integration-arm64-redis-security-${BRANCH}-report" }
+                                    catchError { unstash "integration-arm64-mongo-${BRANCH}-report" }
+                                    catchError { unstash "integration-arm64-mongo-security-${BRANCH}-report" }
+                                }
+                            }
                         }
+
                         dir ('TAF/testArtifacts/reports/merged-report/') {
                             LOGFILES= sh (
                                 script: 'ls *-log.html | sed ":a;N;s/\\n/,/g;ta"',
                                 returnStdout: true
                             )
+                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'IntegrationTest')) {
+                                INTEGRATION_LOGFILES= sh (
+                                    script: 'ls integration-*-log.html | sed ":a;N;s/\\n/,/g;ta"',
+                                    returnStdout: true
+                                )
+                                publishHTML(
+                                    target: [
+                                        allowMissing: false,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: '.',
+                                        reportFiles: "${INTEGRATION_LOGFILES}",
+                                        reportName: 'Integration Test Reports']
+                                )
+                            }
+                            
+                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'BackwardTest')) {
+                                BACKWARD_LOGFILES= sh (
+                                    script: 'ls backward-*-log.html | sed ":a;N;s/\\n/,/g;ta"',
+                                    returnStdout: true
+                                )
+                                publishHTML(
+                                    target: [
+                                        allowMissing: false,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: '.',
+                                        reportFiles: "${BACKWARD_LOGFILES}",
+                                        reportName: 'Backward Test Reports']
+                                )
+                            }
                         }
                     }
-                    publishHTML(
-                        target: [
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: false,
-                            reportDir: 'TAF/testArtifacts/reports/merged-report',
-                            reportFiles: "${LOGFILES}",
-                            reportName: 'Integration Test Reports']
-                    )
-
+                    
                     junit 'TAF/testArtifacts/reports/merged-report/**.xml'
                 }                                         
             }
