@@ -63,28 +63,6 @@ def call(config) {
                                     }
                                 }
                             }
-                            stage('amd64-mongo'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = false
-                                }
-                                steps {
-                                    script {
-                                        startTest()
-                                    }
-                                }
-                            }
-                            stage('amd64-mongo-security'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = true
-                                }
-                                steps {
-                                    script {
-                                        startTest()
-                                    }
-                                }
-                            }
                         }
                     }
 
@@ -118,28 +96,6 @@ def call(config) {
                                     }
                                 }
                             }
-                            stage('arm64-mongo'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = false
-                                }
-                                steps {
-                                    script {
-                                        startTest()
-                                    }
-                                }
-                            }
-                            stage('arm64-mongo-security'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = true
-                                }
-                                steps {
-                                    script {
-                                        startTest()
-                                    }
-                                }
-                            }
                         }
                     }
                 }    
@@ -154,12 +110,8 @@ def call(config) {
 
                             catchError { unstash "x86_64-redis-${BRANCH}-report" }
                             catchError { unstash "x86_64-redis-security-${BRANCH}-report" }
-                            catchError { unstash "x86_64-mongo-${BRANCH}-report" }
-                            catchError { unstash "x86_64-mongo-security-${BRANCH}-report" }
                             catchError { unstash "arm64-redis-${BRANCH}-report" }
                             catchError { unstash "arm64-redis-security-${BRANCH}-report" }
-                            catchError { unstash "arm64-mongo-${BRANCH}-report" }
-                            catchError { unstash "arm64-mongo-security-${BRANCH}-report" }
                         }
                     
                         dir ('TAF/testArtifacts/reports/merged-report/') {
