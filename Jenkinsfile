@@ -71,28 +71,6 @@ def call(config) {
                                     }
                                 }
                             }
-                            stage('amd64-mongo'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = false
-                                }
-                                steps {
-                                    script {
-                                        integrationTest()
-                                    }
-                                }
-                            }
-                            stage('amd64-mongo-security'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = true
-                                }
-                                steps {
-                                    script {
-                                        integrationTest()
-                                    }
-                                }
-                            }
                         }
                     }
                     stage ('Run Backward Test on amd64') {
@@ -165,28 +143,6 @@ def call(config) {
                                     }
                                 }
                             }
-                            stage('arm64-mongo'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = false
-                                }
-                                steps {
-                                    script {
-                                        integrationTest()
-                                    }
-                                }
-                            }
-                            stage('arm64-mongo-security'){
-                                environment {
-                                    USE_DB = '-mongo'
-                                    SECURITY_SERVICE_NEEDED = true
-                                }
-                                steps {
-                                    script {
-                                        integrationTest()
-                                    }
-                                }
-                            }
                         }
                     }
                     stage ('Run Backward Test on arm64') {
@@ -251,14 +207,10 @@ def call(config) {
                                 if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'x86_64')) {
                                     catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
                                     catchError { unstash "integration-x86_64-redis-security-${BRANCH}-report" }
-                                    catchError { unstash "integration-x86_64-mongo-${BRANCH}-report" }
-                                    catchError { unstash "integration-x86_64-mongo-security-${BRANCH}-report" }
                                 }
                                 if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'arm64')) {
                                     catchError { unstash "integration-arm64-redis-${BRANCH}-report" }
                                     catchError { unstash "integration-arm64-redis-security-${BRANCH}-report" }
-                                    catchError { unstash "integration-arm64-mongo-${BRANCH}-report" }
-                                    catchError { unstash "integration-arm64-mongo-security-${BRANCH}-report" }
                                 }
                             }
                         }
