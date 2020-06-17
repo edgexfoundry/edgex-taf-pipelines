@@ -32,7 +32,8 @@ def main() {
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                            -e USE_DB=${USE_DB} -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
+                            -e USE_DB=${USE_DB} --security-opt label:disable \
+                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
                 }
 
@@ -40,13 +41,13 @@ def main() {
                     echo "Profile : ${profile}"
                     echo "===== Deploy ${profile} ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include deploy-device-service -u deploy.robot -p ${profile}"
 
                     echo "===== Run ${profile} Test Case ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include Backward -u functionalTest/device-service/common -p ${profile} \
                             --name ${profile}-${BCT_RELEASE}"
@@ -58,7 +59,7 @@ def main() {
 
                     echo "===== Shutdown ${profile} ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include shutdown-device-service -u shutdown.robot -p ${profile}"
                 }
@@ -66,7 +67,7 @@ def main() {
                 stage ("[${BCT_RELEASE}] Stop EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     sh 'curl -X DELETE http://localhost:48080/api/v1/event/scruball'
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${COMPOSE_IMAGE} \
+                            --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${COMPOSE_IMAGE} \
                             -f ${env.WORKSPACE}/TAF/utils/scripts/docker/docker-compose.yaml stop"
                 }
                 
@@ -77,7 +78,7 @@ def main() {
                     }
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
                             -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e USE_DB=${USE_DB} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include backward -u deploy.robot -p ${profile}"
@@ -87,7 +88,7 @@ def main() {
                     echo "Profile : ${profile}"
                     echo "===== Run ${profile} Test Case ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include Backward -u functionalTest/device-service/common -p ${profile} \
                             --name ${profile}-backward"
@@ -101,7 +102,7 @@ def main() {
                 stage ("[Backward] Stash Report - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     echo '===== Merge Reports ====='
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                                -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
+                                -e COMPOSE_IMAGE=${COMPOSE_IMAGE} ${TAF_COMMOM_IMAGE} \
                                 rebot --inputdir TAF/testArtifacts/reports/rename-report \
                                 --outputdir TAF/testArtifacts/reports/${BRANCH}-report"
 
@@ -123,7 +124,7 @@ def main() {
                 
                 stage ("[Backward] Shutdown EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include shutdown-edgex -u shutdown.robot -p ${profile}"
                 }                             
