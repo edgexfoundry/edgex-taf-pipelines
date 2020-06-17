@@ -20,6 +20,11 @@ def call(config) {
             timestamps()
         }
 
+        parameters {
+            choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
+            choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
+        }
+
         environment {
             // Define test branches and device services
             BRANCHLIST = 'master' // Branch in edgex-taf repo
@@ -34,6 +39,9 @@ def call(config) {
             stage ('Run Test') {
                 parallel {
                     stage ('Run Test on amd64') {
+                        when { 
+                            expression { params.TEST_ARCH == 'All' || params.TEST_ARCH == 'x86_64' }
+                        }
                         environment {
                             ARCH = 'x86_64'
                             SLAVE = edgex.getNode(config, 'amd64')
@@ -42,6 +50,9 @@ def call(config) {
                         }
                         stages {
                             stage('amd64-redis'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
@@ -53,6 +64,9 @@ def call(config) {
                                 }
                             }
                             stage('amd64-redis-security'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = true
@@ -67,6 +81,9 @@ def call(config) {
                     }
 
                     stage ('Run Test on arm64') {
+                        when { 
+                            expression { params.TEST_ARCH == 'All' || params.TEST_ARCH == 'arm64' }
+                        }
                         environment {
                             ARCH = 'arm64'
                             SLAVE = edgex.getNode(config, 'arm64')
@@ -75,6 +92,9 @@ def call(config) {
                         }
                         stages {
                             stage('arm64-redis'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
@@ -86,6 +106,9 @@ def call(config) {
                                 }
                             }
                             stage('arm64-redis-security'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = true
@@ -108,10 +131,22 @@ def call(config) {
                         for (z in BRANCHES) {
                             def BRANCH = z
 
-                            catchError { unstash "x86_64-redis-${BRANCH}-report" }
-                            catchError { unstash "x86_64-redis-security-${BRANCH}-report" }
-                            catchError { unstash "arm64-redis-${BRANCH}-report" }
-                            catchError { unstash "arm64-redis-security-${BRANCH}-report" }
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "x86_64-redis-${BRANCH}-report" }
+                                }
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                    catchError { unstash "x86_64-redis-security-${BRANCH}-report" }
+                                }
+                            }
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "arm64-redis-${BRANCH}-report" }
+                                }
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                    catchError { unstash "arm64-redis-security-${BRANCH}-report" }
+                                }
+                            }
                         }
                     
                         dir ('TAF/testArtifacts/reports/merged-report/') {
@@ -126,7 +161,7 @@ def call(config) {
                         target: [
                             allowMissing: false,
                             alwaysLinkToLastBuild: true,
-                            keepAll: false,
+                            keepAll: true,
                             reportDir: 'TAF/testArtifacts/reports/merged-report',
                             reportFiles: "${LOGFILES}",
                             reportName: 'Functional Test Reports']
