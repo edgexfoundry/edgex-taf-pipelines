@@ -20,8 +20,9 @@ def call(config) {
             timestamps()
         }
         parameters {
-            choice(name: 'TESTSTRATEGY', choices: ['All', 'IntegrationTest', 'BackwardTest'])
-            choice(name: 'ARCH', choices: ['All', 'x86_64', 'arm64'])
+            choice(name: 'TEST_STRATEGY', choices: ['All', 'IntegrationTest', 'BackwardTest'])
+            choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
+            choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
         }
         environment {
             // Define test branches and device services
@@ -39,8 +40,8 @@ def call(config) {
                 parallel {
                     stage ('Run Integration Test on amd64') {
                         when { 
-                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'IntegrationTest' }
-                            expression { params.ARCH == 'All' || params.ARCH == 'x86_64' }
+                            expression { params.TEST_STRATEGY == 'All' || params.TEST_STRATEGY == 'IntegrationTest' }
+                            expression { params.TEST_ARCH == 'All' || params.TEST_ARCH == 'x86_64' }
                         }
                         environment {
                             ARCH = 'x86_64'
@@ -50,6 +51,9 @@ def call(config) {
                         }
                         stages {
                             stage('amd64-redis'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
@@ -61,6 +65,9 @@ def call(config) {
                                 }
                             }
                             stage('amd64-redis-security'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = true
@@ -75,8 +82,8 @@ def call(config) {
                     }
                     stage ('Run Backward Test on amd64') {
                         when { 
-                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'BackwardTest' }
-                            expression { params.ARCH == 'All' || params.ARCH == 'x86_64' }
+                            expression { params.TEST_STRATEGY == 'All' || params.TEST_STRATEGY == 'BackwardTest' }
+                            expression { params.TEST_ARCH == 'All' || params.TEST_ARCH == 'x86_64' }
                         }
                         environment {
                             ARCH = 'x86_64'
@@ -86,6 +93,9 @@ def call(config) {
                         }
                         stages {
                             stage('backward-amd64-redis'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
@@ -97,6 +107,9 @@ def call(config) {
                                 }
                             }
                             stage('backward-amd64-redis-security'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = true
@@ -111,8 +124,8 @@ def call(config) {
                     }
                     stage ('Run Integration Test on arm64') {
                         when { 
-                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'IntegrationTest' }
-                            expression { params.ARCH == 'All' || params.ARCH == 'arm64' }
+                            expression { params.TEST_STRATEGY == 'All' || params.TEST_STRATEGY == 'IntegrationTest' }
+                            expression { params.TEST_ARCH == 'All' || params.TEST_ARCH == 'arm64' }
                         }
                         environment {
                             ARCH = 'arm64'
@@ -122,6 +135,9 @@ def call(config) {
                         }
                         stages {
                             stage('arm64-redis'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
@@ -133,6 +149,9 @@ def call(config) {
                                 }
                             }
                             stage('arm64-redis-security'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = true
@@ -147,8 +166,8 @@ def call(config) {
                     }
                     stage ('Run Backward Test on arm64') {
                         when { 
-                            expression { params.TESTSTRATEGY == 'All' || params.TESTSTRATEGY == 'BackwardTest' }
-                            expression { params.ARCH == 'All' || params.ARCH == 'arm64' }
+                            expression { params.TEST_STRATEGY == 'All' || params.TEST_STRATEGY == 'BackwardTest' }
+                            expression { params.TEST_ARCH == 'All' || params.TEST_ARCH == 'arm64' }
                         }
                         environment {
                             ARCH = 'arm64'
@@ -158,6 +177,9 @@ def call(config) {
                         }
                         stages {
                             stage('arm64-redis'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = false
@@ -169,6 +191,9 @@ def call(config) {
                                 }
                             }
                             stage('arm64-redis-security'){
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
                                 environment {
                                     USE_DB = '-redis'
                                     SECURITY_SERVICE_NEEDED = true
@@ -191,36 +216,48 @@ def call(config) {
                             def BRANCH = z
 
                             // Backward Test Report
-                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'BackwardTest')) {
-                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'x86_64')) {
-                                    catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                                    catchError { unstash "backward-x86_64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'BackwardTest')) {
+                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                        catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
+                                    }
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                        catchError { unstash "backward-x86_64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                                    }
                                 }
-                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'arm64')) {
-                                    catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                                    catchError { unstash "backward-arm64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                        catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
+                                    } 
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                        catchError { unstash "backward-arm64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
+                                    }
                                 }
                             }
 
                             // Integration Test Report
-                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'IntegrationTest')) {
-                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'x86_64')) {
-                                    catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
-                                    catchError { unstash "integration-x86_64-redis-security-${BRANCH}-report" }
+                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'IntegrationTest')) {
+                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                        catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
+                                    } 
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                        catchError { unstash "integration-x86_64-redis-security-${BRANCH}-report" }
+                                    }
                                 }
-                                if (("${params.ARCH}" == 'All' || "${params.ARCH}" == 'arm64')) {
-                                    catchError { unstash "integration-arm64-redis-${BRANCH}-report" }
-                                    catchError { unstash "integration-arm64-redis-security-${BRANCH}-report" }
+                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                        catchError { unstash "integration-arm64-redis-${BRANCH}-report" }
+                                    } 
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                        catchError { unstash "integration-arm64-redis-security-${BRANCH}-report" }
+                                    }
                                 }
                             }
                         }
 
                         dir ('TAF/testArtifacts/reports/merged-report/') {
-                            LOGFILES= sh (
-                                script: 'ls *-log.html | sed ":a;N;s/\\n/,/g;ta"',
-                                returnStdout: true
-                            )
-                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'IntegrationTest')) {
+                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'IntegrationTest')) {
                                 INTEGRATION_LOGFILES= sh (
                                     script: 'ls integration-*-log.html | sed ":a;N;s/\\n/,/g;ta"',
                                     returnStdout: true
@@ -236,7 +273,7 @@ def call(config) {
                                 )
                             }
                             
-                            if (("${params.TESTSTRATEGY}" == 'All' || "${params.TESTSTRATEGY}" == 'BackwardTest')) {
+                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'BackwardTest')) {
                                 BACKWARD_LOGFILES= sh (
                                     script: 'ls backward-*-log.html | sed ":a;N;s/\\n/,/g;ta"',
                                     returnStdout: true
