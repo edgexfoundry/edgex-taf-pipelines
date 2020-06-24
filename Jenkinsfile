@@ -106,20 +106,6 @@ def call(config) {
                                     }
                                 }
                             }
-                            stage('backward-amd64-redis-security'){
-                                when { 
-                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
-                                }
-                                environment {
-                                    USE_DB = '-redis'
-                                    SECURITY_SERVICE_NEEDED = true
-                                }
-                                steps {
-                                    script {
-                                        backwardTest()
-                                    }
-                                }
-                            }
                         }
                     }
                     stage ('Run Integration Test on arm64') {
@@ -190,20 +176,6 @@ def call(config) {
                                     }
                                 }
                             }
-                            stage('arm64-redis-security'){
-                                when { 
-                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
-                                }
-                                environment {
-                                    USE_DB = '-redis'
-                                    SECURITY_SERVICE_NEEDED = true
-                                }
-                                steps {
-                                    script {
-                                        backwardTest()
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -221,16 +193,10 @@ def call(config) {
                                     if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
                                         catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
                                     }
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                        catchError { unstash "backward-x86_64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
-                                    }
                                 }
                                 if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
                                     if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
                                         catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                                    } 
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                        catchError { unstash "backward-arm64-redis-security-${BRANCH}-${BCT_RELEASE}-report" }
                                     }
                                 }
                             }
