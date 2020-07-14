@@ -38,6 +38,7 @@ def main() {
                 stage ("Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped -u integrationTest -p device-virtual"
                 }
