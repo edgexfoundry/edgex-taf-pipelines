@@ -51,7 +51,8 @@ def main() {
 
                             echo "===== Run ${profile} Test Case ====="
                             sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
+                                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
+                                    -e ARCH=${ARCH} --security-opt label:disable \
                                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                                     --exclude Skipped -u functionalTest/device-service/common -p ${profile}"
                             
