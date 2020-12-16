@@ -20,7 +20,7 @@ def call(config) {
             timestamps()
         }
         parameters {
-            choice(name: 'TEST_STRATEGY', choices: ['All', 'IntegrationTest', 'BackwardTest'])
+            choice(name: 'TEST_STRATEGY', choices: ['IntegrationTest', 'BackwardTest', 'All'])
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
         }
