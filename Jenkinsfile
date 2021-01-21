@@ -25,8 +25,8 @@ def call(config) {
         }
         environment {
             // Define compose and taf-commom images
-            TAF_COMMOM_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common:latest'
-            TAF_COMMOM_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common-arm64:latest'
+            TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
+            TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose:latest'
             COMPOSE_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose-arm64:latest'
         }
@@ -41,7 +41,7 @@ def call(config) {
                         environment {
                             ARCH = 'x86_64'
                             NODE = edgex.getNode(config, 'amd64')
-                            TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_AMD64}"
+                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_AMD64}"
                             COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
                             SECURITY_SERVICE_NEEDED = false
                         }
@@ -59,7 +59,7 @@ def call(config) {
                         environment {
                             ARCH = 'arm64'
                             NODE = edgex.getNode(config, 'arm64')
-                            TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_ARM64}"
+                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_ARM64}"
                             COMPOSE_IMAGE = "${COMPOSE_IMAGE_ARM64}"
                             SECURITY_SERVICE_NEEDED = false
                         }
