@@ -11,7 +11,7 @@ def main() {
         def BRANCH = x
 
         runbranchstage["IntegrationTest ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"]= {
-            node("${SLAVE}") {
+            node("${NODE}") {
                 stage ('Checkout edgex-taf repository') {
                     checkout([$class: 'GitSCM',
                         branches: [[name: "*/${BRANCH}"]],
