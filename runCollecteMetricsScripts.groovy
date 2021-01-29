@@ -5,7 +5,7 @@ def main() {
         USE_SECURITY = '-security-'
     }
 
-    node("${SLAVE}") {
+    node("${NODE}") {
         stage ('Checkout edgex-taf repository') {
             checkout([$class: 'GitSCM',
                 branches: [[name: "*/master"]],
