@@ -44,7 +44,7 @@ def call(config) {
                         }
                         environment {
                             ARCH = 'x86_64'
-                            SLAVE = edgex.getNode(config, 'amd64')
+                            NODE = edgex.getNode(config, 'amd64')
                             TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_AMD64}"
                             COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
                         }
@@ -86,7 +86,7 @@ def call(config) {
                         }
                         environment {
                             ARCH = 'arm64'
-                            SLAVE = edgex.getNode(config, 'arm64')
+                            NODE = edgex.getNode(config, 'arm64')
                             TAF_COMMOM_IMAGE = "${TAF_COMMOM_IMAGE_ARM64}"
                             COMPOSE_IMAGE = "${COMPOSE_IMAGE_ARM64}"
                         }
