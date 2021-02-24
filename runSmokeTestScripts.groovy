@@ -24,7 +24,7 @@ def main() {
 
                 stage ("Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     dir ('TAF/utils/scripts/docker') {
-                        sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY} nightly-build ${params.SHA1}"
+                        sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY} pre-release ${params.SHA1}"
                         sh 'ls *.yml *.yaml'
                     }
 
