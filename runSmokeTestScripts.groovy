@@ -33,14 +33,15 @@ def main() {
                             -e USE_DB=${USE_DB} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
+                    
+                    // Deploy Device Virtual
+                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
+                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                            --exclude Skipped --include deploy-device-service -u deploy.robot -p device-virtual"
                 }
 
                 stage ("Run Functional Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
-                                    -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                                    --exclude Skipped --include deploy-device-service -u deploy.robot -p device-virtual"
-
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                             --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
@@ -51,10 +52,6 @@ def main() {
                         sh "cp ../edgex/log.html functional-log.html"
                         sh "cp ../edgex/report.xml functional-report.xml"
                     }
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
-                                    -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                                    --exclude Skipped --include shutdown-device-service -u shutdown.robot -p device-virtual"
                 }
 
                 stage ("Run Integration Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
