@@ -37,8 +37,6 @@ def main() {
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
                 }
 
-                // Disable temporary
-                /*
                 echo "Profiles : ${PROFILES}"
                 stage ("Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     script {
@@ -71,7 +69,7 @@ def main() {
                         }
                     }
                 }
-                */
+                
                 stage ("Run V2 API Tests - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"){
                     echo "===== Run V2 API Tests ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \

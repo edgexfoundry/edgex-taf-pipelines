@@ -28,7 +28,7 @@ def call(config) {
         environment {
             // Define test branches and device services
             BRANCHLIST = 'master' // Branch in edgex-taf repo
-            PROFILELIST = 'device-virtual,device-modbus'
+            PROFILELIST = 'device-virtual'  // device-modbus is not ready for v2 API
             TAF_COMMOM_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common:latest'
             TAF_COMMOM_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/docker-edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose:latest'
