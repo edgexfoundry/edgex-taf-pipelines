@@ -36,9 +36,23 @@ def main() {
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
                 }
+                
+                stage ("Run V2 API Tests - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"){
+                    echo "===== Run V2 API Tests ====="
+                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
+                            -e ARCH=${ARCH} --security-opt label:disable \
+                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
+                            --exclude Skipped --include v2-api -u functionalTest/V2-API -p default"
+
+                    dir ('TAF/testArtifacts/reports/rename-report') {
+                        sh "cp ../edgex/log.html v2-api-log.html"
+                        sh "cp ../edgex/report.xml v2-api-report.xml"
+                    }
+                }
 
                 echo "Profiles : ${PROFILES}"
-                stage ("Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("Run Device Service Tests - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     script {
                         for (y in PROFILES) {
                             def profile = y
@@ -69,20 +83,7 @@ def main() {
                         }
                     }
                 }
-                
-                stage ("Run V2 API Tests - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}"){
-                    echo "===== Run V2 API Tests ====="
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                            -e ARCH=${ARCH} --security-opt label:disable \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMOM_IMAGE} \
-                            --exclude Skipped --include v2-api -u functionalTest/V2-API -p default"
 
-                    dir ('TAF/testArtifacts/reports/rename-report') {
-                        sh "cp ../edgex/log.html v2-api-log.html"
-                        sh "cp ../edgex/report.xml v2-api-report.xml"
-                    }
-                }
                 stage ("Stash Report - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     echo '===== Merge Reports ====='
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
