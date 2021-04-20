@@ -1,1 +1,3 @@
+# edgex-taf-pipelnes
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr-raw/edgexfoundry/edgex-taf-pipelines)](https://github.com/edgexfoundry/edgex-taf-pipelines/pulls) [![GitHub Contributors](https://img.shields.io/github/contributors/edgexfoundry/edgex-taf-pipelines)](https://github.com/edgexfoundry/edgex-taf-pipelines/contributors) [![GitHub Committers](https://img.shields.io/badge/team-committers-green)](https://github.com/orgs/edgexfoundry/teams/edgex-taf-pipelines-committers/members) [![GitHub Commit Activity](https://img.shields.io/github/commit-activity/m/edgexfoundry/edgex-taf-pipelines)](https://github.com/edgexfoundry/edgex-taf-pipelines/commits)
 
