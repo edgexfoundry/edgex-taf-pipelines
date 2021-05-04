@@ -33,15 +33,6 @@ def main() {
                             -e USE_DB=${USE_DB} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
-                    
-                    // Deploy Device Virtual
-                    // Disable temporary
-                    /*
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include deploy-device-service -u deploy.robot -p device-virtual"
-                    */
                 }
 
                 stage ("Run Functional Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
@@ -57,20 +48,26 @@ def main() {
                     }
                 }
 
-                // Disable temporary
-                    /*
-                stage ("Run Integration Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
+                stage ("Run device-virtual Test Script") {
+                    // Deploy Device Virtual
+                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
+                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                            --exclude Skipped --include deploy-device-service -u deploy.robot -p device-virtual"
+                    
+                    // Run Tests
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                             --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                             -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include SmokeTest -u integrationTest -p device-virtual"
-                
+                            --exclude Skipped --include SmokeTest -u functionalTest/device-service -p device-virtual"
+                    
                     dir ('TAF/testArtifacts/reports/rename-report') {
-                        sh "cp ../edgex/log.html integration-log.html"
-                        sh "cp ../edgex/report.xml integration-report.xml"
+                        sh "cp ../edgex/log.html device-service-log.html"
+                        sh "cp ../edgex/report.xml device-service-report.xml"
                     }
-                }*/
+                    
+                }
 
                 stage ("Stash Report - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     echo '===== Merge Reports ====='
