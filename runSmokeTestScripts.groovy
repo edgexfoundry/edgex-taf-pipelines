@@ -49,12 +49,6 @@ def main() {
                 }
 
                 stage ("Run device-virtual Test Script") {
-                    // Deploy Device Virtual
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include deploy-device-service -u deploy.robot -p device-virtual"
-                    
                     // Run Tests
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                             --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
