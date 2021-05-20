@@ -33,13 +33,6 @@ def main() {
                             -e USE_DB=${USE_DB} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
-
-                    // Deploy Device Virtual
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                            -e USE_DB=${USE_DB} --security-opt label:disable \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include deploy-device-service -u deploy.robot -p device-virtual"
                 }
 
                 stage ("Run Tests Script - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
