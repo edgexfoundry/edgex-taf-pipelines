@@ -57,12 +57,6 @@ def main() {
                         for (y in PROFILES) {
                             def profile = y
                             echo "Profile : ${profile}"
-                            echo "===== Deploy ${profile} ====="
-                            sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
-                                    -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                                    --exclude Skipped --include deploy-device-service -u deploy.robot -p ${profile}"
-
                             echo "===== Run ${profile} Test Case ====="
                             sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
@@ -74,12 +68,6 @@ def main() {
                                 sh "cp ../edgex/log.html ${profile}-common-log.html"
                                 sh "cp ../edgex/report.xml ${profile}-common-report.xml"
                             }
-
-                            echo "===== Shutdown ${profile} ====="
-                            sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
-                                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} --security-opt label:disable \
-                                    -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                                    --exclude Skipped --include shutdown-device-service -u shutdown.robot -p ${profile}"
                         }
                     }
                 }
