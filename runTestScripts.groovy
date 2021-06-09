@@ -41,8 +41,8 @@ def main() {
                     echo "===== Run V2 API Tests ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                            -e ARCH=${ARCH} --security-opt label:disable \
-                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                            -e ARCH=${ARCH}  --env-file ${WORK_DIR}/TAF/utils/scripts/docker/common-taf.env \
+                            --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                             --exclude Skipped --include v2-api -u functionalTest/V2-API -p default"
 
                     dir ('TAF/testArtifacts/reports/rename-report') {
