@@ -22,6 +22,7 @@ def call(config) {
         parameters {
             choice(name: 'TEST_STRATEGY', choices: ['All', 'PerfMetrics'])
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
+            choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
         }
         environment {
             // Define compose and taf-commom images
@@ -43,11 +44,33 @@ def call(config) {
                             NODE = edgex.getNode(config, 'amd64')
                             TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_AMD64}"
                             COMPOSE_IMAGE = "${COMPOSE_IMAGE_AMD64}"
-                            SECURITY_SERVICE_NEEDED = false
                         }
-                        steps {
-                            script {
-                                collectPerMetricsTest()
+                        stages {
+                            stage('amd64') {
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
+                                environment {
+                                    SECURITY_SERVICE_NEEDED = false
+                                }
+                                steps {
+                                    script {
+                                        collectPerMetricsTest()
+                                    }
+                                }
+                            }
+                            stage('amd64-security') {
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
+                                environment {
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        collectPerMetricsTest()
+                                    }
+                                }
                             }
                         }
                     }
@@ -61,11 +84,33 @@ def call(config) {
                             NODE = edgex.getNode(config, 'arm64')
                             TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_ARM64}"
                             COMPOSE_IMAGE = "${COMPOSE_IMAGE_ARM64}"
-                            SECURITY_SERVICE_NEEDED = false
                         }
-                        steps {
-                            script {
-                                collectPerMetricsTest()
+                        stages {
+                            stage('arm64') {
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'No' }
+                                }
+                                environment {
+                                    SECURITY_SERVICE_NEEDED = false
+                                }
+                                steps {
+                                    script {
+                                        collectPerMetricsTest()
+                                    }
+                                }
+                            }
+                            stage('arm64-security') {
+                                when { 
+                                    expression { params.WITH_SECURITY == 'All' || params.WITH_SECURITY == 'Yes' }
+                                }
+                                environment {
+                                    SECURITY_SERVICE_NEEDED = true
+                                }
+                                steps {
+                                    script {
+                                        collectPerMetricsTest()
+                                    }
+                                }
                             }
                         }
                     }
@@ -75,11 +120,25 @@ def call(config) {
                 steps{
                     script {
                         // unstash reports
-                        catchError { unstash "perf-metrics-x86_64-report" }
-                        catchError { unstash "perf-metrics-arm64-report" }
+                        if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'PerfMetrics')) {
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                        catchError { unstash "perf-metrics-x86_64-report"}
+                                    }
+                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                        catchError { unstash "perf-metrics-x86_64-security-report"}
+                                    }
+                                }
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "perf-metrics-arm64-report"}
+                                }
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                    catchError { unstash "perf-metrics-arm64-security-report"}
+                                }
+                            }
 
-                        dir ('TAF/testArtifacts/reports/stash-report/') {
-                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'PerfMetrics')) {
+                            dir ('TAF/testArtifacts/reports/stash-report/') {
                                 DETAIL_LOGFILES= sh (
                                     script: 'ls perf-metrics-*log.html | sed ":a;N;s/\\n/,/g;ta"',
                                     returnStdout: true
@@ -117,7 +176,7 @@ def call(config) {
 
 def collectPerMetricsTest() {
     catchError {
-        timeout(time: 40, unit: 'MINUTES') {
+        timeout(time: 60, unit: 'MINUTES') {
             def rootDir = pwd()
             def runCollecteMetricsScripts = load "${rootDir}/runCollecteMetricsScripts.groovy"
             runCollecteMetricsScripts.main()
