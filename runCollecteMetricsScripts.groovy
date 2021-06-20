@@ -23,7 +23,7 @@ def main() {
 
             sh "docker run --rm -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -v /var/run/docker.sock:/var/run/docker.sock --security-opt label:disable \
-                    ${COMPOSE_IMAGE} -f ${env.WORKSPACE}/TAF/utils/scripts/docker/docker-compose.yaml pull"
+                    ${COMPOSE_IMAGE} -f ${env.WORKSPACE}/TAF/utils/scripts/docker/docker-compose.yml pull"
 
             sh "docker run --rm --network host --privileged -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -e ARCH=${ARCH} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} --security-opt label:disable \
@@ -50,7 +50,7 @@ def main() {
                 // rename reports
                 sh "sudo cp rebot-report/log.html stash-report/perf-metrics-${ARCH}${USE_SECURITY}log.html"
                 sh "sudo cp rebot-report/result.xml stash-report/perf-metrics-${ARCH}${USE_SECURITY}report.xml"
-                catchError{ sh "sudo cp edgex/performance-metrics.html stash-report/perf-metrics-${ARCH}${USE_SECURITY}summary.html" }
+                sh "sudo cp edgex/performance-metrics.html stash-report/perf-metrics-${ARCH}${USE_SECURITY}summary.html"
             } 
             stash name: "perf-metrics-${ARCH}${USE_SECURITY}report", includes: "TAF/testArtifacts/reports/stash-report/*", allowEmpty: true
         }
