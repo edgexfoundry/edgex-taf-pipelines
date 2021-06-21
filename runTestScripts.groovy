@@ -27,7 +27,6 @@ def main() {
                 stage ("Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     dir ('TAF/utils/scripts/docker') {
                         sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY}"
-                        sh 'ls *.yml *.yaml'
                     }
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
