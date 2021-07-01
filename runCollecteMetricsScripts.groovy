@@ -8,7 +8,7 @@ def main() {
     node("${NODE}") {
         stage ('Checkout edgex-taf repository') {
             checkout([$class: 'GitSCM',
-                branches: [[name: "*/master"]],
+                branches: [[name: "refs/${TAF_BRANCH}"]],
                 doGenerateSubmoduleConfigurations: false, 
                 extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '']], 
                 submoduleCfg: [], 
@@ -18,7 +18,7 @@ def main() {
 
         stage ("Collect Performance Metrics ${USE_SECURITY}${ARCH}") {
             dir ('TAF/utils/scripts/docker') {
-                sh "sh get-compose-file-perfermance.sh ${ARCH} ${USE_SECURITY}"
+                sh "sh get-compose-file-perfermance.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH}"
             }
 
             sh "docker run --rm -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \

@@ -23,6 +23,8 @@ def call(config) {
             choice(name: 'TEST_STRATEGY', choices: ['All', 'PerfMetrics'])
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
+            string(name: 'TAF_BRANCH', defaultValue: 'heads/master', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'master', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
         }
         environment {
             // Define compose and taf-commom images
@@ -30,6 +32,8 @@ def call(config) {
             TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose:latest'
             COMPOSE_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose-arm64:latest'
+            TAF_BRANCH = "${params.TAF_BRANCH}"
+            COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
         }
         stages {
             stage ('Run Test') {
