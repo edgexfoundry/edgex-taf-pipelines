@@ -14,7 +14,7 @@ def main() {
             node("${NODE}") {
                 stage ('Checkout edgex-taf repository') {
                     checkout([$class: 'GitSCM',
-                        branches: [[name: "*/${BRANCH}"]],
+                        branches: [[name: "refs/${TAF_BRANCH}"]],
                         doGenerateSubmoduleConfigurations: false, 
                         extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '']], 
                         submoduleCfg: [], 
@@ -24,7 +24,7 @@ def main() {
 
                 stage ("Deploy EdgeX - ${ARCH}${USE_DB}${USE_SECURITY}${BRANCH}") {
                     dir ('TAF/utils/scripts/docker') {
-                        sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY}"
+                        sh "sh get-compose-file.sh ${USE_DB} ${ARCH} ${USE_SECURITY} pre-release ${COMPOSE_BRANCH}"
                     }
 
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
