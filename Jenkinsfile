@@ -23,12 +23,11 @@ def call(config) {
             choice(name: 'TEST_STRATEGY', choices: ['IntegrationTest', 'BackwardTest', 'All'])
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
-            string(name: 'TAF_BRANCH', defaultValue: 'heads/master', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
-            string(name: 'COMPOSE_BRANCH', defaultValue: 'master', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
+            string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
         }
         environment {
             // Define test branches and device services
-            BRANCHLIST = 'master'
             TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose:latest'
@@ -187,41 +186,36 @@ def call(config) {
             stage ('Publish Robotframework Report...') {
                 steps{
                     script {
-                        def BRANCHES = "${BRANCHLIST}".split(',')
-                        for (z in BRANCHES) {
-                            def BRANCH = z
-
-                            // Backward Test Report
-                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'BackwardTest')) {
-                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                        catchError { unstash "backward-x86_64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                                    }
-                                }
-                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                        catchError { unstash "backward-arm64-redis-${BRANCH}-${BCT_RELEASE}-report" }
-                                    }
+                        // Backward Test Report
+                        if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'BackwardTest')) {
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "backward-x86_64-redis-${BCT_RELEASE}-report" }
                                 }
                             }
-
-                            // Integration Test Report
-                            if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'IntegrationTest')) {
-                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                        catchError { unstash "integration-x86_64-redis-${BRANCH}-report" }
-                                    } 
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                        catchError { unstash "integration-x86_64-redis-security-${BRANCH}-report" }
-                                    }
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "backward-arm64-redis-${BCT_RELEASE}-report" }
                                 }
-                                if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                        catchError { unstash "integration-arm64-redis-${BRANCH}-report" }
-                                    } 
-                                    if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                        catchError { unstash "integration-arm64-redis-security-${BRANCH}-report" }
-                                    }
+                            }
+                        }
+
+                        // Integration Test Report
+                        if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'IntegrationTest')) {
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "integration-x86_64-redis-report" }
+                                }
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                    catchError { unstash "integration-x86_64-redis-security-report" }
+                                }
+                            }
+                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                    catchError { unstash "integration-arm64-redis-report" }
+                                }
+                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                    catchError { unstash "integration-arm64-redis-security-report" }
                                 }
                             }
                         }
@@ -242,7 +236,7 @@ def call(config) {
                                         reportName: 'Integration Test Reports']
                                 )
                             }
-                            
+
                             if (("${params.TEST_STRATEGY}" == 'All' || "${params.TEST_STRATEGY}" == 'BackwardTest')) {
                                 BACKWARD_LOGFILES= sh (
                                     script: 'ls backward-*-log.html | sed ":a;N;s/\\n/,/g;ta"',
@@ -260,9 +254,9 @@ def call(config) {
                             }
                         }
                     }
-                    
+
                     junit 'TAF/testArtifacts/reports/merged-report/**.xml'
-                }                                         
+                }
             }
         }
     }
