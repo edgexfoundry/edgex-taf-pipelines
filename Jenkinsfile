@@ -21,7 +21,7 @@ def call(config) {
         parameters {
             string(
                 name: 'SHA1',
-                defaultValue: 'master', 
+                defaultValue: 'main',
                 description: 'GitHub PR Trigger provided parameter for specifying the commit to checkout. \
                             For downloading docker-compose file from developer-script repo'
             )
@@ -30,7 +30,7 @@ def call(config) {
         }
         environment {
             // Define test branches and device services
-            BRANCHLIST = 'master'
+            TAF_BRANCH = 'main'
             TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose:latest'
@@ -126,26 +126,21 @@ def call(config) {
             stage ('Publish Robotframework Report...') {
                 steps{
                     script {
-                        def BRANCHES = "${BRANCHLIST}".split(',')
-                        for (z in BRANCHES) {
-                            def BRANCH = z
-
-                            // Smoke Test Report
-                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                    catchError { unstash "smoke-x86_64-redis-${BRANCH}-report" }
-                                } 
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                    catchError { unstash "smoke-x86_64-redis-security-${BRANCH}-report" }
-                                }
+                        // Smoke Test Report
+                        if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                catchError { unstash "smoke-x86_64-redis-${TAF_BRANCH}-report" }
                             }
-                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                    catchError { unstash "smoke-arm64-redis-${BRANCH}-report" }
-                                } 
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                    catchError { unstash "smoke-arm64-redis-security-${BRANCH}-report" }
-                                }
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                catchError { unstash "smoke-x86_64-redis-security-${TAF_BRANCH}-report" }
+                            }
+                        }
+                        if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                catchError { unstash "smoke-arm64-redis-${TAF_BRANCH}-report" }
+                            }
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                catchError { unstash "smoke-arm64-redis-security-${TAF_BRANCH}-report" }
                             }
                         }
 
