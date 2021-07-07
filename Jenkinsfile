@@ -23,13 +23,12 @@ def call(config) {
         parameters {
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
-            string(name: 'TAF_BRANCH', defaultValue: 'heads/master', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
-            string(name: 'COMPOSE_BRANCH', defaultValue: 'master', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
+            string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
         }
 
         environment {
             // Define test branches and device services
-            BRANCHLIST = 'master' // Branch in edgex-taf repo
             PROFILELIST = 'device-virtual,device-modbus'
             TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
@@ -131,25 +130,20 @@ def call(config) {
             stage ('Publish Robotframework Report...') {
                 steps{
                     script {
-                        def BRANCHES = "${BRANCHLIST}".split(',')
-                        for (z in BRANCHES) {
-                            def BRANCH = z
-
-                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                    catchError { unstash "x86_64-redis-${BRANCH}-report" }
-                                }
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                    catchError { unstash "x86_64-redis-security-${BRANCH}-report" }
-                                }
+                        if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                catchError { unstash "x86_64-redis-report" }
                             }
-                            if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                    catchError { unstash "arm64-redis-${BRANCH}-report" }
-                                }
-                                if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                    catchError { unstash "arm64-redis-security-${BRANCH}-report" }
-                                }
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                catchError { unstash "x86_64-redis-security-report" }
+                            }
+                        }
+                        if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
+                                catchError { unstash "arm64-redis-report" }
+                            }
+                            if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
+                                catchError { unstash "arm64-redis-security-report" }
                             }
                         }
                     
