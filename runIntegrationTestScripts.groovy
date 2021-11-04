@@ -14,7 +14,7 @@ def main() {
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '']],
                     submoduleCfg: [],
-                    userRemoteConfigs: [[url: 'https://github.com/edgexfoundry/edgex-taf.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/cherrycl/edgex-taf.git']]
                 ])
             }
             stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
