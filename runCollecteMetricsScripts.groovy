@@ -27,6 +27,7 @@ def main() {
 
             sh "docker run --rm --network host --privileged -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -e ARCH=${ARCH} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} --security-opt label:disable \
+                    --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env \
                     -v /var/run/docker.sock:/var/run/docker.sock -e COMPOSE_IMAGE=${COMPOSE_IMAGE} \
                     ${TAF_COMMON_IMAGE} --exclude Skipped -u performanceTest/performance-metrics-collection \
                     --profile performance-metrics"
