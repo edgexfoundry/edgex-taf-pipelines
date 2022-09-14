@@ -268,7 +268,7 @@ def backwardTest() {
 
 def integrationTest() {
     catchError {
-        timeout(time: 30, unit: 'MINUTES') {
+        timeout(time: 50, unit: 'MINUTES') {
             def rootDir = pwd()
             def runIntegrationTestScripts = load "${rootDir}/runIntegrationTestScripts.groovy"
             runIntegrationTestScripts.main()
