@@ -1,9 +1,16 @@
 def main() {
     def USE_SECURITY = '-'
     def runbranchstage = [:]
+    def BUSES
 
     if ("${SECURITY_SERVICE_NEEDED}" == 'true') {
         USE_SECURITY = '-security-'
+    }
+
+    if ("${TEST_BUS}" == 'All') {
+        BUSES = "REDIS,MQTT".split(',')
+    } else {
+        BUSES = "${TEST_BUS}"
     }
 
     runbranchstage["IntegrationTest ${ARCH}${USE_SECURITY}${TAF_BRANCH}"]= {
@@ -17,102 +24,120 @@ def main() {
                     userRemoteConfigs: [[url: 'https://github.com/edgexfoundry/edgex-taf.git']]
                 ])
             }
-            stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test"
-                }
-            }
+            if ( BUSES != 'None' ) {
+                for (BUS in BUSES) {
+                    stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                        dir ('TAF/utils/scripts/docker') {
+                            sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test"
+                        }
+                    }
+                    // Set deploy_tag by Messagebus
+                    if ( BUS == 'REDIS' ) {
+                        deploy_tag = 'deploy-base-service'
+                    } else {
+                        deploy_tag = 'mqtt-bus'
+                    }
 
-            stage ("Deploy EdgeX - Redis Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                def deployRedisLog= sh (
-                    script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                    --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include deploy-base-service -u deploy.robot -p default --name redis-bus-deploy",
-                    returnStdout: true
-                )
-                deployRedisSuccess = sh (
-                    script: "echo '$deployRedisLog' | grep '1 passed'",
-                    returnStatus: true
-                )
-                dir ("TAF/testArtifacts/reports/rename-report") {
-                    sh "cp ../edgex/log.html redis-bus-deploy-log.html"
-                    sh "cp ../edgex/report.xml redis-bus-deploy-report.xml"
-                }
-            }
+                    stage ("Deploy EdgeX - ${BUS} Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                        def deployLog= sh (
+                            script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
+                            --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                            --exclude Skipped --include ${deploy_tag} -u deploy.robot -p default --name ${BUS}-bus-deploy",
+                            returnStdout: true
+                        )
+                        deploySuccess = sh (
+                            script: "echo '$deployLog' | grep '1 passed'",
+                            returnStatus: true
+                        )
+                        dir ("TAF/testArtifacts/reports/rename-report") {
+                            sh "cp ../edgex/log.html ${BUS}-bus-deploy-log.html"
+                            sh "cp ../edgex/report.xml ${BUS}-bus-deploy-report.xml"
+                        }
+                    }
 
-            if ( deployRedisSuccess == 0 ) {
-                stage ("Run Tests Script - Redis Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                        --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
-                        -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -v /tmp/edgex/secrets:/tmp/edgex/secrets:z \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped --include MessageQueue=redis -u integrationTest -p device-virtual --name redis-bus"
+                    if ( deploySuccess == 0 ) {
+                        stage ("Run Tests Script - ${BUS} Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                            sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                                --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                                -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -v /tmp/edgex/secrets:/tmp/edgex/secrets:z \
+                                -v /var/run/docker.sock:/var/run/docker.sock \
+                                --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
+                                --exclude Skipped --include MessageQueue=${BUS} -u integrationTest -p device-virtual --name ${BUS}-bus"
 
-                    dir ('TAF/testArtifacts/reports/rename-report') {
-                        sh "cp ../edgex/log.html redis-bus-log.html"
-                        sh "cp ../edgex/report.xml redis-bus-report.xml"
+                            dir ('TAF/testArtifacts/reports/rename-report') {
+                                sh "cp ../edgex/log.html ${BUS}-bus-log.html"
+                                sh "cp ../edgex/report.xml ${BUS}-bus-report.xml"
+                            }
+                        }
+                    }
+
+                    stage ("Shutdown EdgeX - ${BUS} Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                        sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                            -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
+                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                            --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name ${BUS}-bus-shutdown"
+                        
+                        dir ("TAF/testArtifacts/reports/rename-report") {
+                            sh "cp ../edgex/log.html ${BUS}-bus-shutdown-log.html"
+                            sh "cp ../edgex/report.xml ${BUS}-bus-shutdown-report.xml"
+                        }
                     }
                 }
             }
 
-            stage ("Shutdown EdgeX - Redis Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
-                    -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name redis-bus-shutdown"
-                
-                dir ("TAF/testArtifacts/reports/rename-report") {
-                    sh "cp ../edgex/log.html redis-bus-shutdown-log.html"
-                    sh "cp ../edgex/report.xml redis-bus-shutdown-report.xml"
-                }
-            }
-
-            stage ("Deploy EdgeX - MQTT Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                def deployMQTTLog= sh (
-                    script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                    --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include mqtt-bus -u deploy.robot -p default --name mqtt-bus-deploy",
-                    returnStdout: true
-                )
-                deployMQTTSuccess = sh (
-                    script: "echo '$deployMQTTLog' | grep '1 passed'",
-                    returnStatus: true
-                )
-
-                dir ("TAF/testArtifacts/reports/rename-report") {
-                    sh "cp ../edgex/log.html mqtt-bus-deploy-log.html"
-                    sh "cp ../edgex/report.xml mqtt-bus-deploy-report.xml"
-                }
-            }
-
-            if ( deployMQTTSuccess == 0 ) {
-                stage ("Run Tests Script - MQTT Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                        --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
-                        -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -v /tmp/edgex/secrets:/tmp/edgex/secrets:z \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped --include MessageQueue=MQTT -u integrationTest -p device-virtual --name mqtt-bus"
-
-                    dir ('TAF/testArtifacts/reports/rename-report') {
-                        sh "cp ../edgex/log.html mqtt-bus-log.html"
-                        sh "cp ../edgex/report.xml mqtt-bus-report.xml"
+            // Delayed Start
+            if ("${SECURITY_SERVICE_NEEDED}" == 'true') {
+                stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                    dir ('TAF/utils/scripts/docker') {
+                        sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test true"
                     }
                 }
-            }
 
-            stage ("Shutdown EdgeX - MQTT Bus - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
-                sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
-                    -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
-                    -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name mqtt-bus-shutdown"
-                
-                dir ("TAF/testArtifacts/reports/rename-report") {
-                    sh "cp ../edgex/log.html mqtt-bus-shutdown-log.html"
-                    sh "cp ../edgex/report.xml mqtt-bus-shutdown-report.xml"
+                stage ("Deploy EdgeX - Delayed Start - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                    def deployLog= sh (
+                        script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                        -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
+                        --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                        --exclude Skipped --include deploy-base-service -u deploy.robot -p default --name delayed-start-deploy",
+                        returnStdout: true
+                    )
+                    deploySuccess = sh (
+                        script: "echo '$deployLog' | grep '1 passed'",
+                        returnStatus: true
+                    )
+                    dir ("TAF/testArtifacts/reports/rename-report") {
+                        sh "cp ../edgex/log.html delayed-start-deploy-log.html"
+                        sh "cp ../edgex/report.xml delayed-start-deploy-report.xml"
+                    }
+                }
+
+                if ( deploySuccess == 0 ) {
+                    stage ("Run Tests Script - Delayed Start - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                        sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                            --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
+                            -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -v /tmp/edgex/secrets:/tmp/edgex/secrets:z \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
+                            --exclude Skipped --include DelayedStart -u integrationTest -p device-virtual --name delayed-start-test"
+
+                        dir ('TAF/testArtifacts/reports/rename-report') {
+                            sh "cp ../edgex/log.html delayed-start-log.html"
+                            sh "cp ../edgex/report.xml delayed-start-report.xml"
+                        }
+                    }
+                }
+
+                stage ("Shutdown EdgeX - Delayed Start - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                    sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
+                        -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
+                        -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
+                        --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name delayed-start-shutdown"
+                    
+                    dir ("TAF/testArtifacts/reports/rename-report") {
+                        sh "cp ../edgex/log.html delayed-start-shutdown-log.html"
+                        sh "cp ../edgex/report.xml delayed-start-shutdown-report.xml"
+                    }
                 }
             }
 
