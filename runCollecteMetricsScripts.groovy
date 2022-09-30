@@ -23,7 +23,7 @@ def main() {
 
             sh "docker run --rm -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -v /var/run/docker.sock:/var/run/docker.sock --security-opt label:disable \
-                    ${COMPOSE_IMAGE} -f ${env.WORKSPACE}/TAF/utils/scripts/docker/docker-compose.yml pull"
+                    ${COMPOSE_IMAGE} docker compose -f ${env.WORKSPACE}/TAF/utils/scripts/docker/docker-compose.yml pull"
 
             sh "docker run --rm --network host --privileged -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -e ARCH=${ARCH} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} --security-opt label:disable \
