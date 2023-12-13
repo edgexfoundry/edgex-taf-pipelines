@@ -10,7 +10,7 @@ def main() {
     if ("${TEST_BUS}" == 'All') {
         BUSES = "REDIS,MQTT".split(',')
     } else {
-        BUSES = "${TEST_BUS}"
+        BUSES = ["${TEST_BUS}"]
     }
 
     runbranchstage["IntegrationTest ${ARCH}${USE_SECURITY}${TAF_BRANCH}"]= {
@@ -30,6 +30,10 @@ def main() {
                         dir ('TAF/utils/scripts/docker') {
                             sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test"
                         }
+
+                        // To display host docker version for debugging
+                        sh "docker run --rm --network host --security-opt label:disable --entrypoint docker \
+                            -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} version"
                     }
                     // Set deploy_tag by Messagebus
                     if ( BUS == 'REDIS' ) {
