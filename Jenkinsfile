@@ -25,12 +25,13 @@ def call(config) {
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
             string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
             string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
+            string(name: 'DOCKER_IMAGE_VERSION', defaultValue: '24.0.9', description: 'Official docker image version.')
         }
         environment {
             // Define compose and taf-commom images
             TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
-            COMPOSE_IMAGE = 'docker:26.0.1'
+            COMPOSE_IMAGE = "docker:${params.DOCKER_IMAGE_VERSION}"
             TAF_BRANCH = "${params.TAF_BRANCH}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
         }
