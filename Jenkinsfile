@@ -25,6 +25,7 @@ def call(config) {
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
             string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
             string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
+            choice(name: 'REGISTRY_SERVICE', choices: ['Consul', 'Keeper'])
         }
 
         environment {
@@ -35,6 +36,7 @@ def call(config) {
             COMPOSE_IMAGE = 'docker:26.0.1'
             TAF_BRANCH = "${params.TAF_BRANCH}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
+            REGISTRY_SERVICE = "${params.REGISTRY_SERVICE}"
         }
 
         stages {
