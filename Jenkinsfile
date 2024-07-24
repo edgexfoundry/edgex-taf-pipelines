@@ -27,6 +27,7 @@ def call(config) {
             )
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'], description: 'Test environment')
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'], description: 'Test with security or non-security.')
+            choice(name: 'REGISTRY_SERVICE', choices: ['Keeper', 'Consul'])
         }
         environment {
             // Define test branches and device services
@@ -34,6 +35,7 @@ def call(config) {
             TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE = 'docker:26.0.1'
+            REGISTRY_SERVICE = "${params.REGISTRY_SERVICE}"
         }
         stages { 
             stage ('Run Test') {
