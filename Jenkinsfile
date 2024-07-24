@@ -26,6 +26,7 @@ def call(config) {
             choice(name: 'TEST_BUS', choices: ['All', 'REDIS', 'MQTT', 'None'], description: 'None for only run Delayed Start Case')
             string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
             string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
+            choice(name: 'REGISTRY_SERVICE', choices: ['Keeper', 'Consul'])
         }
         environment {
             // Define test branches and device services
@@ -35,6 +36,7 @@ def call(config) {
             TAF_BRANCH = "${params.TAF_BRANCH}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
             TEST_BUS = "${params.TEST_BUS}"
+            REGISTRY_SERVICE = "${params.REGISTRY_SERVICE}"
         }
         stages {
             stage ('Run Test') {
