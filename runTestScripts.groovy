@@ -50,7 +50,7 @@ def main() {
                         -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e ARCH=${ARCH} \
                         -e REGISTRY_SERVICE=${REGISTRY_SERVICE} --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env \
                         --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped -u functionalTest/API -p default --name API"
+                        --exclude Skipped --exclude DB=postgres -u functionalTest/API -p default --name API"
 
                     dir ('TAF/testArtifacts/reports/rename-report') {
                         sh "cp ../edgex/log.html api-log.html"
