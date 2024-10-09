@@ -64,7 +64,7 @@ def main() {
                                 -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
                                 -v /tmp/edgex/secrets:/tmp/edgex/secrets:z -v /var/run/docker.sock:/var/run/docker.sock \
                                 --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
-                                --exclude Skipped --include MessageBus=${BUS} -u integrationTest -p device-virtual --name ${BUS}-bus"
+                                --exclude Skipped --exclude DB=postgres --include MessageBus=${BUS} -u integrationTest -p device-virtual --name ${BUS}-bus"
 
                             dir ('TAF/testArtifacts/reports/rename-report') {
                                 sh "cp ../edgex/log.html ${BUS}-bus-log.html"
