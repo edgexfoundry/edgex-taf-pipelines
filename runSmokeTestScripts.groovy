@@ -31,6 +31,9 @@ def main() {
             }
 
             stage ("Run Functional Test Script - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
+                echo "==========  Before testing - app-functional-tests logs =========="
+                sh "docker logs edgex-app-functional-tests"
+
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
                     -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
@@ -41,6 +44,8 @@ def main() {
                     sh "cp ../edgex/log.html functional-log.html"
                     sh "cp ../edgex/report.xml functional-report.xml"
                 }
+                echo "==========  After testing - app-functional-tests logs =========="
+                sh "docker logs edgex-app-functional-tests"
             }
 
             stage ("Run device-virtual Test Script") {
@@ -82,7 +87,7 @@ def main() {
                     -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
                     -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -v /var/run/docker.sock:/var/run/docker.sock \
                     --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include SmokeTest -u integrationTest -p default --name integration"
+                    --exclude Skipped --include SmokeTest -u integrationTest -p device-virtual --name integration"
                     
                 dir ('TAF/testArtifacts/reports/rename-report') {
                     sh "cp ../edgex/log.html integration-mqt-log.html"
