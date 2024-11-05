@@ -22,13 +22,13 @@ def main() {
 
             stage ("Deploy EdgeX - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh  ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} funcational-test ${REGISTRY_SERVICE}"
+                    sh "sh get-compose-file.sh  ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} funcational-test"
                 }
 
                 def deployLog = sh (
                     script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z \
                             -w ${env.WORKSPACE} -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
-                            -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e REGISTRY_SERVICE=$REGISTRY_SERVICE \
+                            -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                             --exclude Skipped --include deploy-base-service -u deploy.robot -p default --name deploy",
                     returnStdout: true
@@ -48,9 +48,9 @@ def main() {
                     echo "===== Run API Tests ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                         -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e ARCH=${ARCH} \
-                        -e REGISTRY_SERVICE=${REGISTRY_SERVICE} --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env \
+                        --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env \
                         --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped --exclude DB=postgres -u functionalTest/API -p default --name API"
+                        --exclude Skipped -u functionalTest/API -p default --name API"
 
                     dir ('TAF/testArtifacts/reports/rename-report') {
                         sh "cp ../edgex/log.html api-log.html"
@@ -68,7 +68,7 @@ def main() {
                             echo "===== Run ${profile} Test Case ====="
                             sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                                 -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                                -e ARCH=${ARCH} --security-opt label:disable -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
+                                -e ARCH=${ARCH} --security-opt label:disable \
                                 -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                                 --exclude Skipped -u functionalTest/device-service/common -p ${profile}"
                                 
