@@ -20,12 +20,11 @@ def main() {
 
             stage ("Deploy EdgeX For Funcational- ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${params.SHA1} funcational-test ${REGISTRY_SERVICE}"
+                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${params.SHA1} funcational-test"
                 }
 
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                    -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
                     --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                     --exclude Skipped --include deploy-base-service -u deploy.robot -p default"
             }
@@ -36,7 +35,7 @@ def main() {
 
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
-                    -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
+                    -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                     --exclude Skipped --include SmokeTest -u functionalTest/API -p default --name funcational"
                     
@@ -52,7 +51,7 @@ def main() {
                 // Run Tests
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
-                    -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
+                    -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                     --exclude Skipped --include SmokeTest -u functionalTest/device-service -p device-virtual"
                     
@@ -71,20 +70,18 @@ def main() {
 
             stage ("Deploy EdgeX For Integration MQTT Bus- ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${params.SHA1} integration-test ${REGISTRY_SERVICE}"
+                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${params.SHA1} integration-test"
                 }
 
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
-                    -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
                     --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include mqtt-bus -u deploy.robot -p default"
+                    --exclude Skipped --exclude DelayedStart -u deploy.robot -p default"
             }
 
             stage ("Run Integration Test Script - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     --security-opt label:disable -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e ARCH=${ARCH} \
-                    -e REGISTRY_SERVICE=${REGISTRY_SERVICE} \
                     -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -v /var/run/docker.sock:/var/run/docker.sock \
                     --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
                     --exclude Skipped --include SmokeTest -u integrationTest -p device-virtual --name integration"
