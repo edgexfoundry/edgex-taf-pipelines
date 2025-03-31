@@ -23,8 +23,8 @@ def call(config) {
         parameters {
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
-            string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
-            string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
+            string(name: 'TAF_BRANCH', defaultValue: 'heads/issue-945-main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'feaff825f3e7b35143fb21e1f1b1e30c86432ec5', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: master or ireland')
         }
 
         environment {
