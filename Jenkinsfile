@@ -21,7 +21,7 @@ def call(config) {
         parameters {
             string(
                 name: 'SHA1',
-                defaultValue: 'main',
+                defaultValue: 'feaff825f3e7b35143fb21e1f1b1e30c86432ec5',
                 description: 'GitHub PR Trigger provided parameter for specifying the commit to checkout. \
                             For downloading docker-compose file from developer-script repo'
             )
@@ -30,7 +30,7 @@ def call(config) {
         }
         environment {
             // Define test branches and device services
-            TAF_BRANCH = 'main'
+            TAF_BRANCH = 'issue-945'
             TAF_COMMON_IMAGE = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             COMPOSE_IMAGE = 'docker:28.0.1'
         }
