@@ -20,7 +20,7 @@ def main() {
 
             stage ("Deploy EdgeX For Funcational- ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${params.SHA1} funcational-test"
+                    sh "sh get-compose-file.sh ${params.SHA1} ${USE_SECURITY} funcational-test"
                 }
 
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
@@ -70,7 +70,7 @@ def main() {
 
             stage ("Deploy EdgeX For Integration MQTT Bus- ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${params.SHA1} integration-test"
+                    sh "sh get-compose-file.sh ${params.SHA1} ${USE_SECURITY} integration-test"
                 }
 
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \

@@ -31,9 +31,8 @@ def call(config) {
         environment {
             // Define test branches and device services
             TAF_BRANCH = 'main'
-            TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
-            TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
-            COMPOSE_IMAGE = 'docker:26.0.1'
+            TAF_COMMON_IMAGE = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
+            COMPOSE_IMAGE = 'docker:28.0.1'
         }
         stages { 
             stage ('Run Test') {
@@ -45,7 +44,6 @@ def call(config) {
                         environment {
                             ARCH = 'x86_64'
                             NODE = edgex.getNode(config, 'amd64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_AMD64}"
                         }
                         stages {
                             stage('amd64'){
@@ -83,7 +81,6 @@ def call(config) {
                         environment {
                             ARCH = 'arm64'
                             NODE = edgex.getNode(config, 'arm64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_ARM64}"
                         }
                         stages {
                             stage('arm64'){
