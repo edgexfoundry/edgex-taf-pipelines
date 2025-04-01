@@ -15,7 +15,7 @@ def call(config) {
 
     pipeline {
         agent { label edgex.mainNode(config) }
-        triggers { cron('H 0 * * *') }
+        //triggers { cron('H 0 * * *') }
         options { 
             timestamps()
         }
@@ -30,8 +30,7 @@ def call(config) {
         environment {
             // Define test branches and device services
             PROFILELIST = 'device-virtual,device-modbus'
-            TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
-            TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
+            TAF_COMMON_IMAGE = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
             COMPOSE_IMAGE = 'docker:28.0.1'
             TAF_BRANCH = "${params.TAF_BRANCH}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
@@ -47,7 +46,6 @@ def call(config) {
                         environment {
                             ARCH = 'x86_64'
                             NODE = edgex.getNode(config, 'amd64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_AMD64}"
                         }
                         stages {
                             stage('amd64'){
@@ -86,7 +84,6 @@ def call(config) {
                         environment {
                             ARCH = 'arm64'
                             NODE = edgex.getNode(config, 'arm64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_ARM64}"
                         }
                         stages {
                             stage('arm64'){
