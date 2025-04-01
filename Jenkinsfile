@@ -15,7 +15,7 @@ def call(config) {
 
     pipeline {
         agent { label edgex.mainNode(config) }
-        triggers { cron('H 23 * * 5') }
+        //triggers { cron('H 23 * * 5') }
         options {
             timestamps()
         }
@@ -23,8 +23,8 @@ def call(config) {
             choice(name: 'TEST_STRATEGY', choices: ['All', 'PerfMetrics'])
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
-            string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
-            string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
+            string(name: 'TAF_BRANCH', defaultValue: 'heads/issue-945', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'feaff825f3e7b35143fb21e1f1b1e30c86432ec5', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
             string(name: 'DOCKER_IMAGE_VERSION', defaultValue: '28.0.1', description: 'Official docker image version.')
         }
         environment {
