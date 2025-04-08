@@ -24,12 +24,13 @@ def call(config) {
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
             choice(name: 'TEST_BUS', choices: ['All', 'MQTT', 'None'], description: 'None for only run Delayed Start Case')
-            string(name: 'TAF_BRANCH', defaultValue: 'heads/issue-945', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
-            string(name: 'COMPOSE_BRANCH', defaultValue: 'feaff825f3e7b35143fb21e1f1b1e30c86432ec5', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
+            string(name: 'TAF_BRANCH', defaultValue: 'heads/odessa', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'odessa', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
         }
         environment {
             // Define test branches and device services
-            TAF_COMMON_IMAGE = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
+            //TAF_COMMON_IMAGE = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
+            TAF_COMMON_IMAGE = 'iotechsys/dev-testing-edgex-taf-common:3.1.0'
             COMPOSE_IMAGE = 'docker:28.0.1'
             TAF_BRANCH = "${params.TAF_BRANCH}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
