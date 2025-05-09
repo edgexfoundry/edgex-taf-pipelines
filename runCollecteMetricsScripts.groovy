@@ -29,16 +29,15 @@ def main() {
                     -e ARCH=${ARCH} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} --security-opt label:disable \
                     --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env \
                     -v /var/run/docker.sock:/var/run/docker.sock -e COMPOSE_IMAGE=${COMPOSE_IMAGE} \
-                    ${TAF_COMMON_IMAGE} --exclude Skipped -u performanceTest/performance-metrics-collection \
-                    --profile performance-metrics"
+                    ${TAF_COMMON_IMAGE} --exclude Skipped -t performanceTest/performance-metrics-collection \
+                    -cd performance-metrics -d edgex"
         }
 
         stage ("Stash Report ${USE_SECURITY}${ARCH}") {
             echo '===== rebot Reports ====='
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                                 -e COMPOSE_IMAGE=${COMPOSE_IMAGE} ${TAF_COMMON_IMAGE} \
-                                rebot --inputdir TAF/testArtifacts/reports/edgex \
-                                --outputdir TAF/testArtifacts/reports/rebot-report"
+                                rebot TAF/testArtifacts/reports/edgex TAF/testArtifacts/reports/rebot-report"
 
             dir ("TAF/testArtifacts/reports") {
                 def folderExist = sh (
