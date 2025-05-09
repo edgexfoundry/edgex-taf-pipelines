@@ -37,17 +37,14 @@ def main() {
                             script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                             --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include deploy-base-service -u deploy.robot -p default --name ${BUS}-bus-deploy",
+                            --exclude Skipped --include deploy-base-service -t deploy.robot -cd default --name ${BUS}-bus-deploy \
+                            -o ${BUS}-bus-deploy",
                             returnStdout: true
                         )
                         deploySuccess = sh (
                             script: "echo '$deployLog' | grep '1 passed'",
                             returnStatus: true
                         )
-                        dir ("TAF/testArtifacts/reports/rename-report") {
-                            sh "cp ../edgex/log.html ${BUS}-bus-deploy-log.html"
-                            sh "cp ../edgex/report.xml ${BUS}-bus-deploy-report.xml"
-                        }
                     }
 
                     if ( deploySuccess == 0 ) {
@@ -57,12 +54,8 @@ def main() {
                                 -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                                 -v /tmp/edgex/secrets:/tmp/edgex/secrets:z -v /var/run/docker.sock:/var/run/docker.sock \
                                 --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
-                                --exclude Skipped --exclude DelayedStart -u integrationTest -p device-virtual --name ${BUS}-bus"
-
-                            dir ('TAF/testArtifacts/reports/rename-report') {
-                                sh "cp ../edgex/log.html ${BUS}-bus-log.html"
-                                sh "cp ../edgex/report.xml ${BUS}-bus-report.xml"
-                            }
+                                --exclude Skipped --exclude DelayedStart -t integrationTest -cd device-virtual --name ${BUS}-bus \
+                                -o ${BUS}-bus --no-cleanup"
                         }
                     }
 
@@ -70,12 +63,8 @@ def main() {
                         sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                             -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name ${BUS}-bus-shutdown"
-                        
-                        dir ("TAF/testArtifacts/reports/rename-report") {
-                            sh "cp ../edgex/log.html ${BUS}-bus-shutdown-log.html"
-                            sh "cp ../edgex/report.xml ${BUS}-bus-shutdown-report.xml"
-                        }
+                            --exclude Skipped --include shutdown-edgex -t shutdown.robot -cd default --name ${BUS}-bus-shutdown \
+                            -o ${BUS}-bus-shutdown --no-cleanup"
                     }
                 }
             }
@@ -93,17 +82,14 @@ def main() {
                         script: "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                         -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                         --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped --include deploy-base-service -u deploy.robot -p default --name delayed-start-deploy",
+                        --exclude Skipped --include deploy-base-service -t deploy.robot -cd default --name delayed-start-deploy \
+                        -o delayed-start-deploy --no-cleanup",
                         returnStdout: true
                     )
                     deploySuccess = sh (
                         script: "echo '$deployLog' | grep '1 passed'",
                         returnStatus: true
                     )
-                    dir ("TAF/testArtifacts/reports/rename-report") {
-                        sh "cp ../edgex/log.html delayed-start-deploy-log.html"
-                        sh "cp ../edgex/report.xml delayed-start-deploy-report.xml"
-                    }
                 }
 
                 if ( deploySuccess == 0 ) {
@@ -113,12 +99,8 @@ def main() {
                             -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                             -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/edgex/secrets:/tmp/edgex/secrets:z \
                             --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include DelayedStart -u integrationTest -p device-virtual --name delayed-start-test"
-
-                        dir ('TAF/testArtifacts/reports/rename-report') {
-                            sh "cp ../edgex/log.html delayed-start-log.html"
-                            sh "cp ../edgex/report.xml delayed-start-report.xml"
-                        }
+                            --exclude Skipped --include DelayedStart -t integrationTest -cd device-virtual --name delayed-start-test \
+                            -o delayed-start --no-cleanup"
                     }
                 }
 
@@ -126,12 +108,8 @@ def main() {
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                         -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
                         -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name delayed-start-shutdown"
-                    
-                    dir ("TAF/testArtifacts/reports/rename-report") {
-                        sh "cp ../edgex/log.html delayed-start-shutdown-log.html"
-                        sh "cp ../edgex/report.xml delayed-start-shutdown-report.xml"
-                    }
+                        --exclude Skipped --include shutdown-edgex -t shutdown.robot -cd default --name delayed-start-shutdown \
+                        -o delayed-start-shutdown --no-cleanup"
                 }
             }
 
@@ -139,21 +117,12 @@ def main() {
                 echo '===== Merge Reports ====='
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} ${TAF_COMMON_IMAGE} \
-                    rebot --inputdir TAF/testArtifacts/reports/rename-report \
-                    --outputdir TAF/testArtifacts/reports/integration-report"
+                    rebot TAF/testArtifacts/reports TAF/testArtifacts/reports/merged-report"
 
-                dir ("TAF/testArtifacts/reports/integration-report") {
-                    // Check if the merged-report folder exists
-                    def mergeExist = sh (
-                        script: 'ls ../ | grep merged-report',
-                        returnStatus: true
-                    )
-                    if (mergeExist != 0) {
-                        sh 'mkdir ../merged-report'
-                    }
-                    //Copy log file to merged-report folder
-                    sh "cp log.html ../merged-report/integration-${ARCH}${USE_SECURITY}log.html"
-                    sh "cp result.xml ../merged-report/integration-${ARCH}${USE_SECURITY}report.xml"
+                dir ("TAF/testArtifacts/reports/merged-report") {
+                    //Rename log and result files
+                    sh "sudo mv log.html integration-${ARCH}${USE_SECURITY}log.html"
+                    sh "sudo mv result.xml integration-${ARCH}${USE_SECURITY}report.xml"
                 }
                 stash name: "integration-${ARCH}${USE_SECURITY}report", includes: "TAF/testArtifacts/reports/merged-report/*", allowEmpty: true
             }
