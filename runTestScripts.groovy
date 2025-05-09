@@ -30,17 +30,13 @@ def main() {
                             -w ${env.WORKSPACE} -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
                             -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                             -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                            --exclude Skipped --include deploy-base-service -u deploy.robot -p default --name deploy",
+                            --exclude Skipped --include deploy-base-service -t deploy.robot -cd default --name deploy -o deploy-edgex",
                     returnStdout: true
                 )
                 deploySuccess = sh (
                     script: "echo '$deployLog' | grep '1 passed'",
                     returnStatus: true
                 )
-                dir ("TAF/testArtifacts/reports/rename-report") {
-                    sh "cp ../edgex/log.html deploy-edgex-log.html"
-                    sh "cp ../edgex/report.xml deploy-edgex-report.xml"
-                }
             }
             
             if ( deploySuccess == 0 ) {
@@ -50,12 +46,7 @@ def main() {
                         -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e ARCH=${ARCH} \
                         --env-file ${env.WORKSPACE}/TAF/utils/scripts/docker/common-taf.env \
                         --security-opt label:disable -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                        --exclude Skipped -u functionalTest/API -p default --name API"
-
-                    dir ('TAF/testArtifacts/reports/rename-report') {
-                        sh "cp ../edgex/log.html api-log.html"
-                        sh "cp ../edgex/report.xml api-report.xml"
-                    }
+                        --exclude Skipped -t functionalTest/API -cd default --name API -o api --no-cleanup"
                 }
             
 
@@ -70,12 +61,7 @@ def main() {
                                 -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} \
                                 -e ARCH=${ARCH} --security-opt label:disable \
                                 -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                                --exclude Skipped -u functionalTest/device-service/common -p ${profile}"
-                                
-                            dir ('TAF/testArtifacts/reports/rename-report') {
-                                sh "cp ../edgex/log.html ${profile}-common-log.html"
-                                sh "cp ../edgex/report.xml ${profile}-common-report.xml"
-                            }
+                                --exclude Skipped -t functionalTest/device-service/common -cd ${profile} -o ${profile}-common --no-cleanup"
                         }
                     }
                 }
@@ -85,33 +71,19 @@ def main() {
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
-                    --exclude Skipped --include shutdown-edgex -u shutdown.robot -p default --name shutdown"
-
-                dir ("TAF/testArtifacts/reports/rename-report") {
-                    sh "cp ../edgex/log.html shutdown-edgex-log.html"
-                    sh "cp ../edgex/report.xml shutdown-edgex-report.xml"
-                }
+                    --exclude Skipped --include shutdown-edgex -t shutdown.robot -cd default --name shutdown -o shutdown-edgex --no-cleanup"
             }
 
             stage ("Stash Report - ${ARCH}${USE_SECURITY}${TAF_BRANCH}") {
                 echo '===== Merge Reports ====='
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} ${TAF_COMMON_IMAGE} \
-                    rebot --inputdir TAF/testArtifacts/reports/rename-report \
-                    --outputdir TAF/testArtifacts/reports/report"
+                    rebot TAF/testArtifacts/reports TAF/testArtifacts/reports/merged-report"
 
-                dir ("TAF/testArtifacts/reports/report") {
-                    // Check if the merged-report folder exists
-                    def mergeExist = sh (
-                        script: 'ls ../ | grep merged-report',
-                        returnStatus: true
-                    )
-                    if (mergeExist != 0) {
-                        sh 'mkdir ../merged-report'
-                    }
-                    //Copy log file to merged-report folder
-                    sh "cp log.html ../merged-report/${ARCH}${USE_SECURITY}log.html"
-                    sh "cp result.xml ../merged-report/${ARCH}${USE_SECURITY}report.xml"
+                dir ("TAF/testArtifacts/reports/merged-report") {
+                    //Rename log and result files
+                    sh "sudo mv log.html ${ARCH}${USE_SECURITY}log.html"
+                    sh "sudo mv result.xml ${ARCH}${USE_SECURITY}report.xml"
                 }
                 stash name: "${ARCH}${USE_SECURITY}report", includes: "TAF/testArtifacts/reports/merged-report/*", allowEmpty: true
             }
