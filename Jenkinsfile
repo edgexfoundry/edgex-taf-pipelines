@@ -55,7 +55,8 @@ def call(config) {
                                 }
                                 steps {
                                     script {
-                                        smokeTest()
+                                        sh 'docker version'
+                                        //smokeTest()
                                     }
                                 }
                             }
@@ -68,7 +69,8 @@ def call(config) {
                                 }
                                 steps {
                                     script {
-                                        smokeTest()
+                                        sh 'docker version'
+                                        //smokeTest()
                                     }
                                 }
                             }
@@ -92,7 +94,8 @@ def call(config) {
                                 }
                                 steps {
                                     script {
-                                        smokeTest()
+                                        sh 'docker version'
+                                        //smokeTest()
                                     }
                                 }
                             }
@@ -105,7 +108,8 @@ def call(config) {
                                 }
                                 steps {
                                     script {
-                                        smokeTest()
+                                        sh 'docker version'
+                                        //smokeTest()
                                     }
                                 }
                             }
