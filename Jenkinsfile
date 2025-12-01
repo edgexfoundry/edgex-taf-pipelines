@@ -30,10 +30,11 @@ def call(config) {
         environment {
             // Define test branches and device services
             PROFILELIST = 'device-virtual,device-modbus'
-            TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
-            TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
-            COMPOSE_IMAGE = 'docker:26.0.1'
-            TAF_BRANCH = "${params.TAF_BRANCH}"
+            COMPOSE_IMAGE = 'docker:29.0.4'
+            TAF_BRANCH_PARAM = "${params.TAF_BRANCH}"
+            TAF_BRANCH_NAME = "${params.TAF_BRANCH.replaceFirst('^heads/', '').replaceFirst('^tags/', '')}"
+            TAF_COMMON_IMAGE_TAG = "${TAF_BRANCH_NAME == 'main' ? 'latest' : TAF_BRANCH_NAME}"
+            TAF_COMMON_IMAGE = "iotechsys/dev-testing-edgex-taf-common:${TAF_COMMON_IMAGE_TAG}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
         }
 
@@ -47,7 +48,6 @@ def call(config) {
                         environment {
                             ARCH = 'x86_64'
                             NODE = edgex.getNode(config, 'amd64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_AMD64}"
                         }
                         stages {
                             stage('amd64'){
@@ -86,7 +86,6 @@ def call(config) {
                         environment {
                             ARCH = 'arm64'
                             NODE = edgex.getNode(config, 'arm64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_ARM64}"
                         }
                         stages {
                             stage('arm64'){
@@ -169,7 +168,10 @@ def startTest() {
     catchError {
         timeout(time: 80, unit: 'MINUTES') {
             def rootDir = pwd()
-            def runTestScripts = load "${rootDir}/runTestScripts.groovy"
+            def branchParam = env.TAF_BRANCH_PARAM ?: 'heads/main'
+            def isOdessa = (branchParam == 'odessa' || branchParam == 'heads/odessa')
+            def scriptName = isOdessa ? 'runTestScripts_v0.groovy' : 'runTestScripts.groovy'
+            def runTestScripts = load "${rootDir}/${scriptName}"
             runTestScripts.main()
         }
     }
