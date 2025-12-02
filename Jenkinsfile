@@ -25,14 +25,15 @@ def call(config) {
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
             string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
             string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
-            string(name: 'DOCKER_IMAGE_VERSION', defaultValue: '24.0.9', description: 'Official docker image version.')
+            string(name: 'DOCKER_IMAGE_VERSION', defaultValue: '29.0.4', description: 'Official docker image version.')
         }
         environment {
             // Define compose and taf-commom images
-            TAF_COMMON_IMAGE_AMD64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
-            TAF_COMMON_IMAGE_ARM64 = 'nexus3.edgexfoundry.org:10003/edgex-taf-common-arm64:latest'
             COMPOSE_IMAGE = "docker:${params.DOCKER_IMAGE_VERSION}"
             TAF_BRANCH = "${params.TAF_BRANCH}"
+            TAF_BRANCH_NAME = "${params.TAF_BRANCH.replaceFirst('^heads/', '').replaceFirst('^tags/', '')}"
+            TAF_COMMON_IMAGE_TAG = "${TAF_BRANCH_NAME == 'main' ? 'latest' : TAF_BRANCH_NAME}"
+            TAF_COMMON_IMAGE = "iotechsys/dev-testing-edgex-taf-common:${TAF_COMMON_IMAGE_TAG}"
             COMPOSE_BRANCH = "${params.COMPOSE_BRANCH}"
         }
         stages {
@@ -46,7 +47,6 @@ def call(config) {
                         environment {
                             ARCH = 'x86_64'
                             NODE = edgex.getNode(config, 'amd64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_AMD64}"
                         }
                         stages {
                             stage('amd64') {
@@ -85,7 +85,6 @@ def call(config) {
                         environment {
                             ARCH = 'arm64'
                             NODE = edgex.getNode(config, 'arm64')
-                            TAF_COMMON_IMAGE = "${TAF_COMMON_IMAGE_ARM64}"
                         }
                         stages {
                             stage('arm64') {
@@ -180,7 +179,9 @@ def collectPerMetricsTest() {
     catchError {
         timeout(time: 60, unit: 'MINUTES') {
             def rootDir = pwd()
-            def runCollecteMetricsScripts = load "${rootDir}/runCollecteMetricsScripts.groovy"
+            def branchName = env.TAF_BRANCH_NAME ?: 'main'
+            def scriptName = branchName == 'odessa' ? 'runCollecteMetricsScripts_v0.groovy' : 'runCollecteMetricsScripts.groovy'
+            def runCollecteMetricsScripts = load "${rootDir}/${scriptName}"
             runCollecteMetricsScripts.main()
         }
     }      
