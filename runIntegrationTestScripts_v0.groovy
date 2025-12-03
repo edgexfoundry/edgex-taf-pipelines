@@ -10,7 +10,7 @@ def main() {
         node("${NODE}") {
             stage ('Checkout edgex-taf repository') {
                 checkout([$class: 'GitSCM',
-                    branches: [[name: "refs/update-odessa"]],
+                    branches: [[name: "refs/heads/update-odessa"]],
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '']],
                     submoduleCfg: [],
