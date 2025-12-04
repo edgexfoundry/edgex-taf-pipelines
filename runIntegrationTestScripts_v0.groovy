@@ -74,7 +74,7 @@ def main() {
             if ("${SECURITY_SERVICE_NEEDED}" == 'true') {
                 stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                     dir ('TAF/utils/scripts/docker') {
-                        sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test true"
+                        sh "sh get-compose-file.sh ${COMPOSE_BRANCH} ${USE_SECURITY} integration-test true"
                     }
                 }
 
