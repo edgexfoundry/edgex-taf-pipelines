@@ -25,14 +25,16 @@ def call(config) {
                 description: 'GitHub PR Trigger provided parameter for specifying the commit to checkout. \
                             For downloading docker-compose file from developer-script repo'
             )
+            string(name: 'TAF_BRANCH', defaultValue: 'main',
+                description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'], description: 'Test environment')
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'], description: 'Test with security or non-security.')
         }
         environment {
-            // Define test branches and device services
-            TAF_BRANCH = 'issue-945'
-            TAF_COMMON_IMAGE = 'nexus3.edgexfoundry.org:10003/edgex-taf-common:latest'
-            COMPOSE_IMAGE = 'docker:28.0.1'
+            TAF_BRANCH_PARAM = "${params.TAF_BRANCH}"
+            TAF_COMMON_IMAGE_TAG = "${params.TAF_BRANCH == 'main' ? 'latest' : params.TAF_BRANCH}"
+            TAF_COMMON_IMAGE = "iotechsys/dev-testing-edgex-taf-common:${TAF_COMMON_IMAGE_TAG}"
+            COMPOSE_IMAGE = 'docker:29.0.4'
         }
         stages { 
             stage ('Run Test') {
@@ -123,18 +125,18 @@ def call(config) {
                         // Smoke Test Report
                         if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                catchError { unstash "smoke-x86_64-${TAF_BRANCH}-report" }
+                                catchError { unstash "smoke-x86_64-${env.TAF_BRANCH_PARAM}-report" }
                             }
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                catchError { unstash "smoke-x86_64-security-${TAF_BRANCH}-report" }
+                                catchError { unstash "smoke-x86_64-security-${env.TAF_BRANCH_PARAM}-report" }
                             }
                         }
                         if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                catchError { unstash "smoke-arm64-${TAF_BRANCH}-report" }
+                                catchError { unstash "smoke-arm64-${env.TAF_BRANCH_PARAM}-report" }
                             }
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                catchError { unstash "smoke-arm64-security-${TAF_BRANCH}-report" }
+                                catchError { unstash "smoke-arm64-security-${env.TAF_BRANCH_PARAM}-report" }
                             }
                         }
 
@@ -167,7 +169,8 @@ def smokeTest() {
     catchError {
         timeout(time: 30, unit: 'MINUTES') {
             def rootDir = pwd()
-            def runSmokeTestScripts = load "${rootDir}/runSmokeTestScripts.groovy"
+            def scriptName = env.TAF_BRANCH_PARAM == 'odessa' ? 'runSmokeTestScripts_v0.groovy' : 'runSmokeTestScripts.groovy'
+            def runSmokeTestScripts = load "${rootDir}/${scriptName}"
             runSmokeTestScripts.main()
         }
     }      
