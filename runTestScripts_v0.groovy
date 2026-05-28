@@ -23,7 +23,7 @@ def main() {
 
             stage ("Deploy EdgeX - ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${COMPOSE_BRANCH} ${USE_SECURITY} funcational-test"
+                    sh "sh get-compose-file.sh ${COMPOSE_BRANCH} ${USE_SECURITY} functional-test"
                 }
 
                 def deployLog = sh (

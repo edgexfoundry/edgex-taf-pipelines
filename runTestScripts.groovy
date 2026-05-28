@@ -3,17 +3,16 @@ def main() {
     def PROFILES = "${PROFILELIST}".split(',')
     def USE_SECURITY = '-'
     def runbranchstage = [:]
-    def TAF_BRANCH_PARAM = env.TAF_BRANCH_PARAM ?: 'heads/main'
         
     if ("${SECURITY_SERVICE_NEEDED}" == 'true') {
         USE_SECURITY = '-security-'
     }
 
-    runbranchstage["Test ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}"]= {
+    runbranchstage["Test ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}"]= {
         node("${NODE}") {
             stage ('Checkout edgex-taf repository') {
                 checkout([$class: 'GitSCM',
-                    branches: [[name: "refs/${TAF_BRANCH_PARAM}"]],
+                    branches: [[name: "refs/${TAF_BRANCH}"]],
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '']],
                     submoduleCfg: [],
@@ -21,9 +20,13 @@ def main() {
                 ])
             }
 
-            stage ("Deploy EdgeX - ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}") {
+            stage ("Deploy EdgeX - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh  ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} funcational-test"
+                    if ("${TAF_BRANCH_NAME}" != 'main') {
+                        sh "sh get-compose-file.sh ${COMPOSE_BRANCH} ${USE_SECURITY} functional-test"
+                    } else {
+                        sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} functional-test"
+                    }
                 }
 
                 def deployLog = sh (
@@ -34,6 +37,7 @@ def main() {
                             --exclude Skipped --include deploy-base-service -t deploy.robot -cd default --name deploy -o deploy-edgex",
                     returnStdout: true
                 )
+
                 deploySuccess = sh (
                     script: "echo '$deployLog' | grep '1 passed'",
                     returnStatus: true
@@ -41,7 +45,7 @@ def main() {
             }
             
             if ( deploySuccess == 0 ) {
-                stage ("Run API Tests - ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}"){
+                stage ("Run API Tests - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}"){
                     echo "===== Run API Tests ====="
                     sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                         -e COMPOSE_IMAGE=${COMPOSE_IMAGE} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} -e ARCH=${ARCH} \
@@ -52,7 +56,7 @@ def main() {
             
 
                 echo "Profiles : ${PROFILES}"
-                stage ("Run Device Service Tests - ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}") {
+                stage ("Run Device Service Tests - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                     script {
                         for (y in PROFILES) {
                             def profile = y
@@ -68,14 +72,14 @@ def main() {
                 }
             }
 
-            stage ("Shutdown EdgeX - ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}") {
+            stage ("Shutdown EdgeX - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} --security-opt label:disable \
                     -v /var/run/docker.sock:/var/run/docker.sock ${TAF_COMMON_IMAGE} \
                     --exclude Skipped --include shutdown-edgex -t shutdown.robot -cd default --name shutdown -o shutdown-edgex --no-cleanup"
             }
 
-            stage ("Stash Report - ${ARCH}${USE_SECURITY}${TAF_BRANCH_PARAM}") {
+            stage ("Stash Report - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                 echo '===== Merge Reports ====='
                 sh "docker run --rm --network host -v ${env.WORKSPACE}:${env.WORKSPACE}:rw,z -w ${env.WORKSPACE} \
                     -e COMPOSE_IMAGE=${COMPOSE_IMAGE} ${TAF_COMMON_IMAGE} \
