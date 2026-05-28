@@ -18,12 +18,17 @@ def main() {
 
         stage ("Collect Performance Metrics ${USE_SECURITY}${ARCH}") {
             dir ('TAF/utils/scripts/docker') {
-                sh "sh get-compose-file-perfermance.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH}"
+                if ("${TAF_BRANCH_NAME}" != 'main') {
+                    sh "sh get-compose-file-performance.sh ${COMPOSE_BRANCH} ${USE_SECURITY}"
+                } else {
+                    sh "sh get-compose-file-performance.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH}"
+                }
             }
 
             sh "docker run --rm -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -v /var/run/docker.sock:/var/run/docker.sock --security-opt label:disable \
                     ${COMPOSE_IMAGE} docker compose -f ${env.WORKSPACE}/TAF/utils/scripts/docker/docker-compose.yml pull"
+            sh "docker images"
 
             sh "docker run --rm --network host --privileged -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
                     -e ARCH=${ARCH} -e SECURITY_SERVICE_NEEDED=${SECURITY_SERVICE_NEEDED} --security-opt label:disable \

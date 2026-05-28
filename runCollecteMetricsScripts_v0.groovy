@@ -18,7 +18,7 @@ def main() {
 
         stage ("Collect Performance Metrics ${USE_SECURITY}${ARCH}") {
             dir ('TAF/utils/scripts/docker') {
-                sh "sh get-compose-file-performance.sh ${env.TAF_BRANCH_NAME} ${USE_SECURITY}"
+                sh "sh get-compose-file-performance.sh ${COMPOSE_BRANCH} ${USE_SECURITY}"
             }
 
             sh "docker run --rm -v ${env.WORKSPACE}:${env.WORKSPACE}:z -w ${env.WORKSPACE} \
