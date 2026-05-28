@@ -24,11 +24,11 @@ def call(config) {
             choice(name: 'TEST_ARCH', choices: ['All', 'x86_64', 'arm64'])
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'])
             string(name: 'TAF_BRANCH', defaultValue: 'heads/main', description: 'Test branch for edgexfoundry/edgex-taf repository. Examples: tags/tag or heads/branch')
-            string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or ireland')
+            string(name: 'COMPOSE_BRANCH', defaultValue: 'main', description: 'Test branch for edgexfoundry/edgex-compose repository. Examples: main or palau')
         }
         environment {
             // Define test branches and device services
-            COMPOSE_IMAGE = 'docker:29.0.4'
+            COMPOSE_IMAGE = 'docker:29.5.2'
             TAF_BRANCH = "${params.TAF_BRANCH}"
             TAF_BRANCH_NAME = "${params.TAF_BRANCH.replaceFirst('^heads/', '').replaceFirst('^tags/', '')}"
             TAF_COMMON_IMAGE_TAG = "${TAF_BRANCH_NAME == 'main' ? 'latest' : TAF_BRANCH_NAME}"
