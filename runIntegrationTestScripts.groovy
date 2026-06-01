@@ -20,7 +20,11 @@ def main() {
 
             stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                 dir ('TAF/utils/scripts/docker') {
-                    sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test"
+                    if ("${TAF_BRANCH_NAME}" != 'main') {
+                        sh "sh get-compose-file.sh ${COMPOSE_BRANCH} ${USE_SECURITY} integration-test"
+                    } else {
+                        sh "sh get-compose-file.sh  ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test"
+                    }
                 }
             }
 
@@ -37,6 +41,7 @@ def main() {
                     script: "echo '$deployLog' | grep '1 passed'",
                     returnStatus: true
                 )
+                sh "docker images"
             }
 
             if ( deploySuccess == 0 ) {
@@ -63,7 +68,11 @@ def main() {
             if ("${SECURITY_SERVICE_NEEDED}" == 'true') {
                 stage ("Retrieve Compose File - ${ARCH}${USE_SECURITY}${TAF_BRANCH_NAME}") {
                     dir ('TAF/utils/scripts/docker') {
-                        sh "sh get-compose-file.sh ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test true"
+                        if ("${TAF_BRANCH_NAME}" != 'heads/main') {
+                        sh "sh get-compose-file.sh ${COMPOSE_BRANCH} ${USE_SECURITY} integration-test true"
+                        } else {
+                            sh "sh get-compose-file.sh  ${ARCH} ${USE_SECURITY} ${COMPOSE_BRANCH} integration-test true"
+                        }
                     }
                 }
 
