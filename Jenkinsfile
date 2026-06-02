@@ -31,7 +31,7 @@ def call(config) {
             choice(name: 'WITH_SECURITY', choices: ['All', 'No', 'Yes'], description: 'Test with security or non-security.')
         }
         environment {
-            TAF_BRANCH_PARAM = "${params.TAF_BRANCH}"
+            TAF_BRANCH_NAME = "${params.TAF_BRANCH}"
             TAF_COMMON_IMAGE_TAG = "${params.TAF_BRANCH == 'main' ? 'latest' : params.TAF_BRANCH}"
             TAF_COMMON_IMAGE = "iotechsys/dev-testing-edgex-taf-common:${TAF_COMMON_IMAGE_TAG}"
             COMPOSE_IMAGE = 'docker:29.0.4'
@@ -121,18 +121,18 @@ def call(config) {
                         // Smoke Test Report
                         if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'x86_64')) {
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                catchError { unstash "smoke-x86_64-${env.TAF_BRANCH_PARAM}-report" }
+                                catchError { unstash "smoke-x86_64-${env.TAF_BRANCH_NAME}-report" }
                             }
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                catchError { unstash "smoke-x86_64-security-${env.TAF_BRANCH_PARAM}-report" }
+                                catchError { unstash "smoke-x86_64-security-${env.TAF_BRANCH_NAME}-report" }
                             }
                         }
                         if (("${params.TEST_ARCH}" == 'All' || "${params.TEST_ARCH}" == 'arm64')) {
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'No')) {
-                                catchError { unstash "smoke-arm64-${env.TAF_BRANCH_PARAM}-report" }
+                                catchError { unstash "smoke-arm64-${env.TAF_BRANCH_NAME}-report" }
                             }
                             if (("${params.WITH_SECURITY}" == 'All' || "${params.WITH_SECURITY}" == 'Yes')) {
-                                catchError { unstash "smoke-arm64-security-${env.TAF_BRANCH_PARAM}-report" }
+                                catchError { unstash "smoke-arm64-security-${env.TAF_BRANCH_NAME}-report" }
                             }
                         }
 
@@ -165,7 +165,7 @@ def smokeTest() {
     catchError {
         timeout(time: 30, unit: 'MINUTES') {
             def rootDir = pwd()
-            def scriptName = env.TAF_BRANCH_PARAM == 'odessa' ? 'runSmokeTestScripts_v0.groovy' : 'runSmokeTestScripts.groovy'
+            def scriptName = env.TAF_BRANCH_NAME == 'odessa' ? 'runSmokeTestScripts_v0.groovy' : 'runSmokeTestScripts.groovy'
             def runSmokeTestScripts = load "${rootDir}/${scriptName}"
             runSmokeTestScripts.main()
         }
